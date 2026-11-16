@@ -1,5 +1,6 @@
 import hashlib
 import json
+import time
 import uuid
 from typing import Any
 
@@ -10,7 +11,7 @@ from app.llm.client import ChatMessage, Role
 class RunsRepository:
     """Repository handling durable persistence, step checkpointing, and state recovery.
     
-    Provides transactional guarantees and atomic idempotency keys.
+    Provides transactional guarantees, atomic idempotency keys, and worker lease locks.
     """
 
     def __init__(self, session=None):
@@ -61,9 +62,86 @@ class RunsRepository:
             "total_output_tokens": 0,
             "total_cost_usd": 0.0,
             "snapshot": state.model_dump(),
+            "worker_id": None,
+            "lease_expires_at": None,
         }
         self._steps_db[run_id] = []
         return state
+
+    async def claim_run(
+        self,
+        run_id: str,
+        worker_id: str,
+        lease_duration_seconds: float = 60.0,
+    ) -> bool:
+        """Claims a run for a worker if unassigned, queued, or if previous lease expired."""
+        run = self._runs_db.get(run_id)
+        if not run:
+            return False
+
+        now = time.time()
+        current_status = run.get("status")
+        current_lease = run.get("lease_expires_at")
+        current_worker = run.get("worker_id")
+
+        if current_status in (RunStatus.COMPLETED.value, RunStatus.FAILED.value, RunStatus.CANCELLED.value):
+            return False
+
+        is_free = current_worker is None or current_status == RunStatus.QUEUED.value
+        is_mine = current_worker == worker_id
+        is_expired = current_lease is not None and current_lease < now
+
+        if is_free or is_mine or is_expired:
+            run["worker_id"] = worker_id
+            run["status"] = RunStatus.RUNNING.value
+            run["lease_expires_at"] = now + lease_duration_seconds
+            return True
+
+        return False
+
+    async def heartbeat(
+        self,
+        run_id: str,
+        worker_id: str,
+        lease_duration_seconds: float = 60.0,
+    ) -> bool:
+        """Renews an active lease for the owning worker."""
+        run = self._runs_db.get(run_id)
+        if not run:
+            return False
+        if run.get("worker_id") == worker_id:
+            run["lease_expires_at"] = time.time() + lease_duration_seconds
+            return True
+        return False
+
+    async def release_run(
+        self,
+        run_id: str,
+        worker_id: str,
+        final_status: str | None = None,
+    ) -> bool:
+        """Releases worker ownership upon completion or graceful shutdown."""
+        run = self._runs_db.get(run_id)
+        if not run:
+            return False
+        if run.get("worker_id") == worker_id:
+            run["worker_id"] = None
+            run["lease_expires_at"] = None
+            if final_status:
+                run["status"] = final_status
+            return True
+        return False
+
+    async def get_zombie_runs(self, timeout_seconds: float = 60.0) -> list[str]:
+        """Identifies runs whose lease expired without reaching a terminal status."""
+        now = time.time()
+        zombies: list[str] = []
+        for run_id, entry in self._runs_db.items():
+            status = entry.get("status")
+            lease = entry.get("lease_expires_at")
+            if status == RunStatus.RUNNING.value and lease is not None and lease < now:
+                zombies.append(run_id)
+        return zombies
 
     async def checkpoint_step(
         self,
@@ -108,3 +186,4 @@ class RunsRepository:
 
         # Reconstruct state from latest snapshot
         return RunState.model_validate(run_entry["snapshot"])
+

@@ -35,12 +35,14 @@ class Orchestrator:
         budget_limits: BudgetLimits | None = None,
         loop_detector: LoopDetector | None = None,
         event_listener: EventListener | None = None,
+        runs_repo: Any | None = None,
     ):
         self.llm = llm
         self.registry = registry
         self.budget_manager = BudgetManager(budget_limits)
         self.loop_detector = loop_detector or LoopDetector()
         self.event_listener = event_listener
+        self.runs_repo = runs_repo
 
     async def _emit(self, event_type: str, payload: dict[str, Any]) -> None:
         """Helper to fire asynchronous event notifications."""
@@ -88,6 +90,8 @@ class Orchestrator:
             budget_check = self.budget_manager.check(state)
             if budget_check.is_exceeded:
                 reduce_set_status(state, RunStatus.BUDGET_EXCEEDED, budget_check.message)
+                if self.runs_repo:
+                    await self.runs_repo.checkpoint_step(state, step_kind="budget_exceeded")
                 await self._emit(
                     "budget_exceeded",
                     {"run_id": state.run_id, "reason": budget_check.reason, "message": budget_check.message},
@@ -131,6 +135,8 @@ class Orchestrator:
 
                     if loop_check.is_stalled:
                         reduce_set_status(state, RunStatus.LOOP_DETECTED, loop_check.reason)
+                        if self.runs_repo:
+                            await self.runs_repo.checkpoint_step(state, step_kind="loop_detected")
                         await self._emit(
                             "loop_detected",
                             {"run_id": state.run_id, "step": state.step_count, "reason": loop_check.reason},
@@ -138,7 +144,19 @@ class Orchestrator:
                         loop_tripped = True
                         break
 
-                    # 3b. Execute Tool via Registry
+                    # 3b. Idempotency Check & Execute Tool via Registry
+                    idemp_key = None
+                    if self.runs_repo:
+                        idemp_key = self.runs_repo.generate_idempotency_key(
+                            state.run_id, state.step_count, tc.name, tc.arguments
+                        )
+                        if await self.runs_repo.has_idempotency_key(idemp_key):
+                            await self._emit(
+                                "tool_skipped_idempotent",
+                                {"run_id": state.run_id, "step": state.step_count, "tool": tc.name},
+                            )
+                            continue
+
                     ctx = ToolContext(
                         run_id=state.run_id,
                         step_idx=state.step_count,
@@ -149,6 +167,9 @@ class Orchestrator:
 
                     # 3c. Record Observation & Extract Evidence
                     reduce_record_tool_result(state, tc.id, tc.name, tool_result)
+
+                    if self.runs_repo:
+                        await self.runs_repo.checkpoint_step(state, step_kind="tool", idempotency_key=idemp_key)
 
                     await self._emit(
                         "tool_executed",
@@ -168,6 +189,8 @@ class Orchestrator:
                 report_content = response.content or "No final report content generated."
                 reduce_add_message(state, ChatMessage(role=Role.ASSISTANT, content=report_content))
                 reduce_set_final_report(state, report_content)
+                if self.runs_repo:
+                    await self.runs_repo.checkpoint_step(state, step_kind="completion")
                 await self._emit(
                     "run_completed",
                     {
