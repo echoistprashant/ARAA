@@ -75,3 +75,50 @@ class Planner:
                     PlanStep(idx=3, goal="Synthesize final cited report", success_check="Comprehensive report produced"),
                 ]
             )
+
+    async def replan(
+        self,
+        task: str,
+        current_plan: RunPlan,
+        failed_subgoal: str,
+        failure_reason: str,
+        collected_evidence_count: int,
+    ) -> RunPlan:
+        """Adapts the plan when a sub-goal encounters repeated failures."""
+        prompt = (
+            "You are an expert Research Planning AI adjusting an execution plan after an obstacle.\n"
+            f"ORIGINAL TASK: {task}\n"
+            f"FAILED SUB-GOAL: {failed_subgoal}\n"
+            f"FAILURE REASON: {failure_reason}\n"
+            f"FACTS DISCOVERED SO FAR: {collected_evidence_count} evidence items.\n\n"
+            "Generate an alternative revised plan (2-4 steps) that bypasses this obstacle.\n"
+            "Output MUST be valid JSON adhering strictly to schema: "
+            '{"steps": [{"idx": 1, "goal": "...", "success_check": "..."}]}'
+        )
+
+        messages = [
+            ChatMessage(role=Role.SYSTEM, content="You are an adaptive AI planning engine."),
+            ChatMessage(role=Role.USER, content=prompt),
+        ]
+
+        response = await self.llm.generate(messages=messages, temperature=0.0)
+        content = response.content or ""
+
+        try:
+            clean_json = content
+            if "```json" in clean_json:
+                clean_json = clean_json.split("```json")[1].split("```")[0].strip()
+            elif "```" in clean_json:
+                clean_json = clean_json.split("```")[1].split("```")[0].strip()
+
+            data = json.loads(clean_json)
+            parsed = PlannerOutputSchema.model_validate(data)
+            return RunPlan(steps=parsed.steps)
+        except Exception:
+            # Fallback adapted plan
+            return RunPlan(
+                steps=[
+                    PlanStep(idx=1, goal="Try alternative search queries", success_check="Alternative sources found"),
+                    PlanStep(idx=2, goal="Synthesize available findings", success_check="Partial report complete"),
+                ]
+            )
