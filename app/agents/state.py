@@ -136,3 +136,28 @@ def reduce_set_final_report(state: RunState, report: str) -> RunState:
     state.final_report = report
     state.status = RunStatus.COMPLETED
     return state
+
+
+def reduce_set_plan(state: RunState, plan: RunPlan) -> RunState:
+    """Sets or edits the research plan (supports human edit-in-flight)."""
+    state.plan = plan
+    state.current_subgoal_idx = 0
+    if plan.steps:
+        plan.steps[0].status = "in_progress"
+    return state
+
+
+def reduce_advance_subgoal(state: RunState) -> RunState:
+    """Marks the active sub-goal as completed and advances to the next step."""
+    if not state.plan or not state.plan.steps:
+        return state
+
+    idx = state.current_subgoal_idx
+    if idx < len(state.plan.steps):
+        state.plan.steps[idx].status = "completed"
+
+    if idx + 1 < len(state.plan.steps):
+        state.current_subgoal_idx = idx + 1
+        state.plan.steps[idx + 1].status = "in_progress"
+
+    return state
