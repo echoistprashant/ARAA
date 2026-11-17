@@ -1,0 +1,14 @@
+FROM python:3.12-slim
+
+# Create isolated unprivileged non-root user
+RUN groupadd -g 10001 sandboxgroup && \
+    useradd -u 10001 -g sandboxgroup -s /bin/sh -m sandboxuser
+
+# Install basic data analysis libraries
+RUN pip install --no-cache-dir numpy pandas
+
+WORKDIR /home/sandboxuser
+USER sandboxuser
+
+# Default entrypoint for code execution
+ENTRYPOINT ["python", "-c"]
