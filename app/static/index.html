@@ -2,91 +2,288 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ARAA — Autonomous Research & Analysis Agent</title>
+  
+  <!-- Modern Typography: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS & Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
   <script>
     tailwind.config = {
       darkMode: 'class',
       theme: {
         extend: {
+          fontFamily: {
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
           colors: {
-            brand: { 50: '#eef2ff', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', 900: '#1e1b4b' },
-            cyber: { bg: '#0b0f19', card: '#111827', border: '#1f2937', accent: '#10b981' }
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#1e1b4b',
+              950: '#0c0a24',
+            },
+            slate: {
+              850: '#131b2e',
+              900: '#0f172a',
+              950: '#080d1a',
+            }
           }
         }
       }
     }
   </script>
+  
   <style>
-    body { background-color: #0b0f19; color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    .glass-panel { background: rgba(17, 24, 39, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
-    .terminal-scroll::-webkit-scrollbar { width: 6px; }
-    .terminal-scroll::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
-    .prose-dark h1 { font-size: 1.5rem; font-weight: 700; color: #818cf8; margin-top: 1rem; margin-bottom: 0.5rem; }
-    .prose-dark h2 { font-size: 1.25rem; font-weight: 600; color: #60a5fa; margin-top: 1rem; margin-bottom: 0.5rem; }
-    .prose-dark p { margin-bottom: 0.75rem; line-height: 1.6; color: #d1d5db; }
-    .prose-dark ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 0.75rem; color: #d1d5db; }
-    .prose-dark ol { list-style-type: decimal; margin-left: 1.5rem; margin-bottom: 0.75rem; color: #d1d5db; }
-    .prose-dark table { width: 100%; border-collapse: collapse; margin-top: 1rem; margin-bottom: 1rem; font-size: 0.875rem; }
-    .prose-dark th, .prose-dark td { border: 1px solid #374151; padding: 0.5rem 0.75rem; text-align: left; }
-    .prose-dark th { background: #1f2937; color: #9ca3af; }
-    .prose-dark blockquote { border-left: 4px solid #6366f1; padding-left: 1rem; color: #a5b4fc; margin-bottom: 1rem; }
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    /* Glassmorphism styling */
+    .glass-card {
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+    .glass-card-hover {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-card-hover:hover {
+      border-color: rgba(99, 102, 241, 0.3);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px -2px rgba(99, 102, 241, 0.15);
+    }
+
+    /* Clean Markdown Editorial Styles */
+    .report-prose {
+      color: #cbd5e1;
+      font-size: 0.9375rem;
+      line-height: 1.7;
+    }
+    .report-prose h1 {
+      font-size: 1.625rem;
+      font-weight: 700;
+      color: #f8fafc;
+      letter-spacing: -0.025em;
+      margin-top: 1.5rem;
+      margin-bottom: 0.875rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .report-prose h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      letter-spacing: -0.015em;
+      margin-top: 1.5rem;
+      margin-bottom: 0.625rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .report-prose h3 {
+      font-size: 1.0625rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      margin-top: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+    .report-prose p {
+      margin-bottom: 1rem;
+      color: #94a3b8;
+    }
+    .report-prose strong {
+      color: #f1f5f9;
+      font-weight: 600;
+    }
+    .report-prose ul {
+      list-style-type: disc;
+      margin-left: 1.35rem;
+      margin-bottom: 1rem;
+      color: #cbd5e1;
+    }
+    .report-prose ol {
+      list-style-type: decimal;
+      margin-left: 1.35rem;
+      margin-bottom: 1rem;
+      color: #cbd5e1;
+    }
+    .report-prose li {
+      margin-bottom: 0.35rem;
+      padding-left: 0.25rem;
+    }
+    .report-prose blockquote {
+      border-left: 3px solid #6366f1;
+      background: rgba(99, 102, 241, 0.06);
+      padding: 0.875rem 1.25rem;
+      border-radius: 0 0.5rem 0.5rem 0;
+      color: #c7d2fe;
+      margin-bottom: 1.25rem;
+      font-style: normal;
+    }
+    .report-prose code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.825rem;
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0.15rem 0.4rem;
+      border-radius: 0.25rem;
+      color: #a5b4fc;
+    }
+    .report-prose pre {
+      background: #090d16;
+      border: 1px solid #1e293b;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      margin-bottom: 1.25rem;
+    }
+    .report-prose table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-top: 1rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.85rem;
+      border: 1px solid #1e293b;
+      border-radius: 0.5rem;
+      overflow: hidden;
+    }
+    .report-prose th {
+      background: #0f172a;
+      color: #94a3b8;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+      padding: 0.65rem 0.875rem;
+      border-bottom: 1px solid #1e293b;
+      text-align: left;
+    }
+    .report-prose td {
+      padding: 0.65rem 0.875rem;
+      border-bottom: 1px solid #1e293b;
+      color: #cbd5e1;
+    }
+    .report-prose tr:last-child td {
+      border-bottom: none;
+    }
+    .report-prose tr:hover td {
+      background: rgba(30, 41, 59, 0.4);
+    }
+    .report-prose hr {
+      border: 0;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+      margin: 1.5rem 0;
+    }
+
+    /* Pulse animation for active step */
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.15); }
+    }
+    .pulse-glow {
+      animation: pulseGlow 2s infinite ease-in-out;
+    }
   </style>
 </head>
-<body class="min-h-screen flex flex-col">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-indigo-500/30 selection:text-indigo-200">
 
-  <!-- Top Navigation Bar -->
-  <header class="border-b border-gray-800 bg-gray-950/80 backdrop-blur sticky top-0 z-50 px-6 py-3.5 flex items-center justify-between">
-    <div class="flex items-center space-x-3">
-      <div class="h-9 w-9 rounded-lg bg-gradient-to-tr from-indigo-600 to-emerald-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-        <i class="fa-solid fa-atom text-white text-lg animate-pulse"></i>
-      </div>
-      <div>
-        <h1 class="font-bold text-base tracking-wide text-white flex items-center gap-2">
-          ARAA <span class="text-xs px-2 py-0.5 rounded bg-indigo-950 text-indigo-400 border border-indigo-800 font-mono">v1.0 Production</span>
-        </h1>
-        <p class="text-xs text-gray-400">Autonomous Research & Analysis Agent</p>
-      </div>
-    </div>
+  <!-- Background Ambient Glow -->
+  <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/10 rounded-full blur-[120px]"></div>
+    <div class="absolute top-1/3 -right-40 w-96 h-96 bg-emerald-600/10 rounded-full blur-[120px]"></div>
+  </div>
 
-    <!-- System Vitals Status Pills -->
-    <div class="hidden md:flex items-center space-x-3 text-xs font-mono">
-      <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-800/60 text-emerald-400">
-        <span class="h-2 w-2 rounded-full bg-emerald-500 animate-ping"></span>
-        <span>Docker: Postgres + Redis</span>
+  <!-- Top Navigation Header -->
+  <header class="sticky top-0 z-50 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="relative flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-emerald-400 p-[1px] shadow-lg shadow-indigo-500/20">
+            <div class="w-full h-full bg-slate-950 rounded-[11px] flex items-center justify-center">
+              <i class="fa-solid fa-atom text-indigo-400 text-base pulse-glow"></i>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-base tracking-tight text-white">ARAA</span>
+              <span class="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-indigo-950/80 text-indigo-300 border border-indigo-800/60">v1.0 Pro</span>
+            </div>
+            <p class="text-[11px] text-slate-400 hidden sm:block">Autonomous Research & Analysis Agent</p>
+          </div>
+        </div>
+
+        <!-- Mobile Jump Navigation -->
+        <div class="flex items-center gap-1 md:hidden">
+          <a href="#directivePanel" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white">Query</a>
+          <a href="#reportPanel" class="text-xs px-2.5 py-1 rounded-lg bg-indigo-900/60 text-indigo-300 border border-indigo-700/50">Report</a>
+        </div>
       </div>
-      <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-indigo-950/60 border border-indigo-800/60 text-indigo-400">
-        <i class="fa-solid fa-brain"></i>
-        <span>Gemini 3.5 Flash Lite</span>
+
+      <!-- System Vitals (Horizontally scrollable on mobile) -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 text-xs font-mono scrollbar-none">
+        
+        <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 shrink-0">
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Docker Cluster</span>
+        </div>
+
+        <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-indigo-950/40 border border-indigo-800/40 text-indigo-300 shrink-0">
+          <i class="fa-solid fa-brain text-[11px] text-indigo-400"></i>
+          <span>Gemini 3.5</span>
+        </div>
+
+        <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-purple-950/40 border border-purple-800/40 text-purple-300 shrink-0">
+          <i class="fa-solid fa-shield-halved text-[11px] text-purple-400"></i>
+          <span>Anti-SSRF/TOCTOU</span>
+        </div>
+
+        <div class="px-2.5 py-1 rounded-full bg-amber-950/40 border border-amber-800/40 text-amber-300 font-semibold shrink-0">
+          <span>$0.00 Cost</span>
+        </div>
+
       </div>
-      <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-purple-950/60 border border-purple-800/60 text-purple-300">
-        <i class="fa-solid fa-shield-halved"></i>
-        <span>Anti-SSRF & TOCTOU</span>
-      </div>
-      <div class="px-2.5 py-1 rounded-full bg-amber-950/60 border border-amber-800/60 text-amber-300 font-bold">
-        $0.00 / Zero Cost
-      </div>
+
     </div>
   </header>
 
-  <!-- Main Content Layout -->
-  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+  <!-- Main Grid Workspace -->
+  <main class="relative z-10 flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-    <!-- Left Column: Input Controls & Execution Feed (5 Cols) -->
-    <section class="lg:col-span-5 flex flex-col space-y-5">
+    <!-- LEFT COLUMN: Directive Input & Live Agent Trajectory (5 Cols Desktop) -->
+    <section id="directivePanel" class="lg:col-span-5 flex flex-col space-y-5">
       
-      <!-- Input Card -->
-      <div class="glass-panel rounded-xl p-5 shadow-xl">
-        <div class="flex items-center justify-between mb-3">
-          <label class="text-xs font-semibold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
-            <i class="fa-solid fa-compass text-indigo-400"></i> Research Directive
+      <!-- Card 1: Research Directive Control Panel -->
+      <div class="glass-card glass-card-hover rounded-2xl p-5 shadow-xl">
+        
+        <!-- Header & Role Selector -->
+        <div class="flex items-center justify-between mb-3.5">
+          <label class="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+            <i class="fa-solid fa-compass text-indigo-400 text-sm"></i>
+            <span>Research Directive</span>
           </label>
-          <div class="flex items-center space-x-2">
-            <span class="text-xs text-gray-400">Role:</span>
-            <select id="userRole" class="bg-gray-900 border border-gray-700 text-xs rounded px-2 py-1 text-gray-200 focus:outline-none focus:border-indigo-500">
+          
+          <div class="flex items-center space-x-1.5 bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1">
+            <i class="fa-solid fa-user-shield text-[10px] text-indigo-400"></i>
+            <span class="text-[11px] text-slate-400">Role:</span>
+            <select id="userRole" class="bg-transparent text-xs text-slate-200 font-medium focus:outline-none cursor-pointer">
               <option value="researcher" selected>Researcher</option>
               <option value="operator">Operator</option>
               <option value="admin">Admin</option>
@@ -95,102 +292,176 @@
           </div>
         </div>
 
-        <textarea id="taskInput" rows="3" class="w-full bg-gray-900/90 border border-gray-700 rounded-lg p-3 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition resize-none" placeholder="E.g., What company manufactures the Twinscan EXE:5000 and what is its price?"></textarea>
-
-        <!-- Quick Pill Suggestions -->
-        <div class="mt-3 flex flex-wrap gap-1.5">
-          <button onclick="setQuery('What company manufactures Twinscan EXE:5000 and who is its primary customer?')" class="text-xs px-2 py-1 rounded bg-gray-800/80 hover:bg-gray-700 text-gray-300 transition">🔍 ASML Lithography</button>
-          <button onclick="setQuery('Calculate the compound interest on $50,000 at 7.5% annual rate for 5 years.')" class="text-xs px-2 py-1 rounded bg-gray-800/80 hover:bg-gray-700 text-gray-300 transition">🧮 Compound Math</button>
-          <button onclick="setQuery('Write a Python script to compute Fibonacci numbers up to 100.')" class="text-xs px-2 py-1 rounded bg-gray-800/80 hover:bg-gray-700 text-gray-300 transition">🐍 Python Sandbox</button>
+        <!-- Input Box -->
+        <div class="relative">
+          <textarea id="taskInput" rows="3" 
+            class="w-full bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500/80 focus:ring-1 focus:ring-indigo-500/40 transition resize-none leading-relaxed" 
+            placeholder="What would you like ARAA to investigate autonomously?"></textarea>
+          
+          <div class="absolute bottom-2.5 right-3 text-[10px] text-slate-500 font-mono hidden sm:block">
+            <span>Ctrl + Enter to run</span>
+          </div>
         </div>
 
-        <button id="startBtn" onclick="startResearch()" class="mt-4 w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-medium py-2.5 px-4 rounded-lg shadow-lg shadow-indigo-600/30 flex items-center justify-center space-x-2 transition cursor-pointer">
+        <!-- Suggestion Pills -->
+        <div class="mt-3.5 flex flex-wrap gap-1.5 items-center">
+          <span class="text-[11px] text-slate-500 mr-1"><i class="fa-solid fa-bolt text-[10px] text-amber-400 mr-1"></i>Try:</span>
+          
+          <button onclick="setQuery('What company manufactures Twinscan EXE:5000 and who is its primary customer?')" 
+            class="text-xs px-2.5 py-1 rounded-lg bg-slate-800/70 hover:bg-slate-700/80 border border-slate-700/50 text-slate-300 hover:text-white transition flex items-center gap-1.5">
+            <span>🔬 ASML Lithography</span>
+          </button>
+          
+          <button onclick="setQuery('Calculate the compound interest on $50,000 at 7.5% annual rate for 5 years.')" 
+            class="text-xs px-2.5 py-1 rounded-lg bg-slate-800/70 hover:bg-slate-700/80 border border-slate-700/50 text-slate-300 hover:text-white transition flex items-center gap-1.5">
+            <span>🧮 Compound Math</span>
+          </button>
+          
+          <button onclick="setQuery('What are the top challenges software engineers face in 2026?')" 
+            class="text-xs px-2.5 py-1 rounded-lg bg-slate-800/70 hover:bg-slate-700/80 border border-slate-700/50 text-slate-300 hover:text-white transition flex items-center gap-1.5">
+            <span>💻 Software Eng 2026</span>
+          </button>
+        </div>
+
+        <!-- Primary Action Button -->
+        <button id="startBtn" onclick="startResearch()" 
+          class="mt-4 w-full h-11 bg-gradient-to-r from-indigo-600 via-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-medium rounded-xl shadow-lg shadow-indigo-600/25 flex items-center justify-center space-x-2 transition active:scale-[0.99] cursor-pointer">
           <i class="fa-solid fa-play text-xs"></i>
           <span>Launch Autonomous Investigation</span>
         </button>
+
       </div>
 
-      <!-- Live Execution Log Terminal -->
-      <div class="glass-panel rounded-xl p-4 flex-1 flex flex-col shadow-xl min-h-[360px]">
-        <div class="flex items-center justify-between pb-3 border-b border-gray-800">
+      <!-- Card 2: Live Agent Trajectory Terminal -->
+      <div class="glass-card glass-card-hover rounded-2xl p-5 flex flex-col shadow-xl min-h-[350px] lg:flex-1">
+        
+        <!-- Terminal Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800/80">
           <div class="flex items-center space-x-2">
-            <span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
-            <span class="text-xs font-mono font-semibold uppercase tracking-wider text-gray-300">Live Agent Trajectory</span>
+            <span class="relative flex h-2 w-2">
+              <span id="terminalPulse" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span class="text-xs font-mono font-semibold uppercase tracking-wider text-slate-300">Agent Trajectory</span>
           </div>
-          <span id="runBadge" class="text-xs font-mono px-2 py-0.5 rounded bg-gray-800 text-gray-400">IDLE</span>
+
+          <div class="flex items-center gap-2">
+            <button onclick="clearTerminal()" title="Clear logs" class="text-slate-500 hover:text-slate-300 text-xs transition">
+              <i class="fa-solid fa-eraser"></i>
+            </button>
+            <span id="runBadge" class="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 border border-slate-700/50">IDLE</span>
+          </div>
         </div>
 
-        <!-- Terminal Output Window -->
-        <div id="terminalFeed" class="terminal-scroll flex-1 overflow-y-auto mt-3 space-y-2 font-mono text-xs pr-1">
-          <div class="text-gray-500 italic p-3 text-center">Ready. Launch an investigation to observe real-time tool calls, plan sub-goals, and verification events.</div>
+        <!-- Terminal Feed -->
+        <div id="terminalFeed" class="flex-1 overflow-y-auto mt-3.5 space-y-2 font-mono text-xs pr-1 max-h-[380px] lg:max-h-none">
+          <div class="text-slate-500 text-center py-10 flex flex-col items-center justify-center space-y-2">
+            <i class="fa-solid fa-terminal text-2xl text-slate-700"></i>
+            <p>Ready to dispatch. Submit directive above.</p>
+          </div>
         </div>
 
-        <!-- HITL Approval Banner (Dynamic) -->
-        <div id="hitlBanner" class="hidden mt-3 p-3 rounded-lg bg-amber-950/80 border border-amber-600 text-amber-200">
-          <div class="flex items-start justify-between">
-            <div>
-              <p class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation text-amber-400"></i> Human Authorization Required</p>
-              <p id="hitlDetails" class="text-xs mt-1 text-amber-300"></p>
+        <!-- Human In The Loop (HITL) Approval Modal / Banner -->
+        <div id="hitlBanner" class="hidden mt-4 p-4 rounded-xl bg-amber-950/60 border border-amber-600/80 text-amber-200 backdrop-blur-md">
+          <div class="flex items-start gap-2.5">
+            <i class="fa-solid fa-shield-halved text-amber-400 text-base mt-0.5"></i>
+            <div class="flex-1">
+              <p class="font-bold text-xs text-amber-300 uppercase tracking-wide">Human Authorization Required</p>
+              <p id="hitlDetails" class="text-xs text-amber-200 mt-1"></p>
             </div>
           </div>
-          <div class="mt-3 flex space-x-2">
-            <button onclick="resolveApproval('approve')" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1 px-3 rounded text-xs transition">Authorize Execution</button>
-            <button onclick="resolveApproval('reject')" class="flex-1 bg-red-700 hover:bg-red-600 text-white font-bold py-1 px-3 rounded text-xs transition">Deny Action</button>
+          <div class="mt-3.5 flex space-x-2">
+            <button onclick="resolveApproval('approve')" 
+              class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-1.5 px-3 rounded-lg text-xs transition flex items-center justify-center gap-1.5 shadow">
+              <i class="fa-solid fa-check"></i> Authorize
+            </button>
+            <button onclick="resolveApproval('reject')" 
+              class="flex-1 bg-rose-700 hover:bg-rose-600 text-white font-semibold py-1.5 px-3 rounded-lg text-xs transition flex items-center justify-center gap-1.5 shadow">
+              <i class="fa-solid fa-xmark"></i> Deny
+            </button>
           </div>
         </div>
+
       </div>
+
     </section>
 
-    <!-- Right Column: Research Report & Audit Inspector (7 Cols) -->
-    <section class="lg:col-span-7 flex flex-col space-y-5">
-      <div class="glass-panel rounded-xl p-5 flex-1 flex flex-col shadow-xl min-h-[500px]">
+    <!-- RIGHT COLUMN: Verified Research Report & Inspector (7 Cols Desktop) -->
+    <section id="reportPanel" class="lg:col-span-7 flex flex-col space-y-5">
+      <div class="glass-card glass-card-hover rounded-2xl p-5 sm:p-6 flex-1 flex flex-col shadow-xl min-h-[550px]">
         
-        <!-- Tab Bar -->
-        <div class="flex items-center justify-between border-b border-gray-800 pb-3">
-          <div class="flex space-x-2">
-            <button onclick="switchTab('report')" id="tabBtnReport" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white transition">
-              <i class="fa-solid fa-file-lines mr-1.5"></i> Verified Report
+        <!-- Controls Bar: Tabs & Actions -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800/80 gap-3">
+          
+          <!-- View Switcher Tabs -->
+          <div class="flex items-center space-x-1.5 bg-slate-900/90 border border-slate-800 p-1 rounded-xl w-fit">
+            <button onclick="switchTab('report')" id="tabBtnReport" 
+              class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white transition flex items-center gap-1.5">
+              <i class="fa-solid fa-file-lines text-[11px]"></i>
+              <span>Report</span>
             </button>
-            <button onclick="switchTab('evidence')" id="tabBtnEvidence" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-gray-800 text-gray-400 hover:text-gray-200 transition">
-              <i class="fa-solid fa-database mr-1.5"></i> Evidence Sources
+            <button onclick="switchTab('evidence')" id="tabBtnEvidence" 
+              class="text-xs font-semibold px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition flex items-center gap-1.5">
+              <i class="fa-solid fa-database text-[11px]"></i>
+              <span>Evidence</span>
             </button>
-            <button onclick="switchTab('raw')" id="tabBtnRaw" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-gray-800 text-gray-400 hover:text-gray-200 transition">
-              <i class="fa-solid fa-code mr-1.5"></i> Audit JSON
+            <button onclick="switchTab('raw')" id="tabBtnRaw" 
+              class="text-xs font-semibold px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition flex items-center gap-1.5">
+              <i class="fa-solid fa-code text-[11px]"></i>
+              <span>Audit JSON</span>
             </button>
           </div>
 
-          <!-- History & Grounding Badge -->
-          <div class="flex items-center space-x-2">
-            <select id="runHistorySelect" onchange="selectPastRun(this.value)" class="text-xs bg-gray-900 border border-gray-700 text-gray-300 rounded px-2 py-1 focus:outline-none focus:border-indigo-500">
+          <!-- Right Action Bar: Past Runs & Audit Badge -->
+          <div class="flex items-center gap-2 flex-wrap">
+            
+            <!-- History Selector -->
+            <select id="runHistorySelect" onchange="selectPastRun(this.value)" 
+              class="text-xs bg-slate-900 border border-slate-700 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 max-w-[180px] sm:max-w-[220px] truncate cursor-pointer">
               <option value="">-- Past Runs --</option>
             </select>
-            <div id="groundingBadge" class="hidden text-xs font-mono px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-700">
-              Audit: VERIFIED (100% Grounded)
+
+            <!-- Copy Markdown Button -->
+            <button id="copyBtn" onclick="copyReport()" title="Copy Markdown to Clipboard" 
+              class="text-xs px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white transition flex items-center gap-1">
+              <i class="fa-regular fa-copy"></i>
+              <span id="copyBtnText" class="hidden sm:inline">Copy</span>
+            </button>
+
+            <!-- Grounding Badge -->
+            <div id="groundingBadge" 
+              class="hidden text-[11px] font-mono font-medium px-2.5 py-1 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-700/60 flex items-center gap-1.5">
+              <i class="fa-solid fa-check-double text-[10px]"></i>
+              <span id="groundingBadgeText">VERIFIED</span>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- TAB 1: Rendered Markdown Report -->
+        <div id="tabReport" class="flex-1 overflow-y-auto mt-4 pr-1">
+          <div id="reportContainer" class="report-prose">
+            <div class="text-center py-24 text-slate-500 flex flex-col items-center justify-center space-y-3">
+              <div class="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-600 text-xl">
+                <i class="fa-solid fa-feather-pointed"></i>
+              </div>
+              <p class="font-medium text-slate-400">No research investigation launched yet.</p>
+              <p class="text-xs text-slate-500 max-w-sm">Enter a topic or technical query on the left. ARAA will autonomously gather evidence, verify sources, and generate an empirical report.</p>
             </div>
           </div>
         </div>
 
-        <!-- Tab 1: Rendered Markdown Report -->
-        <div id="tabReport" class="flex-1 overflow-y-auto mt-4 pr-1 terminal-scroll">
-          <div id="reportContainer" class="prose-dark text-sm">
-            <div class="text-center py-20 text-gray-500">
-              <i class="fa-solid fa-newspaper text-4xl mb-3 text-gray-700"></i>
-              <p>No research report generated yet.</p>
-              <p class="text-xs mt-1 text-gray-600">Submit a query to generate an audited, multi-source empirical report.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Tab 2: Evidence Sources Table -->
-        <div id="tabEvidence" class="hidden flex-1 overflow-y-auto mt-4 pr-1 terminal-scroll">
+        <!-- TAB 2: Evidence Sources Ledger -->
+        <div id="tabEvidence" class="hidden flex-1 overflow-y-auto mt-4 pr-1">
           <div id="evidenceContainer" class="space-y-3">
-            <div class="text-center py-20 text-gray-500">No evidence items gathered yet.</div>
+            <div class="text-center py-24 text-slate-500">No evidence items gathered yet.</div>
           </div>
         </div>
 
-        <!-- Tab 3: Raw JSON Inspector -->
-        <div id="tabRaw" class="hidden flex-1 overflow-y-auto mt-4 pr-1 terminal-scroll">
-          <pre id="rawContainer" class="bg-gray-950 p-4 rounded-lg font-mono text-xs text-indigo-300 overflow-x-auto">{}</pre>
+        <!-- TAB 3: Raw JSON Inspector -->
+        <div id="tabRaw" class="hidden flex-1 overflow-y-auto mt-4 pr-1">
+          <pre id="rawContainer" class="bg-slate-950 border border-slate-800/80 p-4 rounded-xl font-mono text-xs text-indigo-300 overflow-x-auto leading-relaxed">{}</pre>
         </div>
 
       </div>
@@ -198,48 +469,84 @@
 
   </main>
 
-  <footer class="border-t border-gray-900 px-6 py-3 text-center text-xs text-gray-600 font-mono">
-    ARAA Autonomous Research & Analysis Agent • Zero-Cost Architecture ($0.00) • Anti-Hallucination & Anti-TOCTOU Grounded
+  <!-- Modern Sticky Bottom Footer -->
+  <footer class="border-t border-slate-900 bg-slate-950/90 py-3 px-6 text-center text-xs text-slate-500 font-mono flex flex-col sm:flex-row items-center justify-between gap-2">
+    <div>
+      ARAA Autonomous Research & Analysis Agent • Zero Cost ($0.00)
+    </div>
+    <div class="flex items-center gap-3 text-slate-400">
+      <span>Anti-Hallucination Verified</span>
+      <span>•</span>
+      <span>pgvector & Redis Ready</span>
+    </div>
   </footer>
 
+  <!-- JavaScript Application Logic -->
   <script>
     let currentRunId = null;
     let activeApprovalId = null;
     let eventSource = null;
+    let currentRawReport = '';
+
+    // Keyboard Shortcut (Ctrl+Enter / Cmd+Enter to launch)
+    document.getElementById('taskInput').addEventListener('keydown', function(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        startResearch();
+      }
+    });
 
     function setQuery(text) {
       document.getElementById('taskInput').value = text;
+      document.getElementById('taskInput').focus();
+    }
+
+    function clearTerminal() {
+      document.getElementById('terminalFeed').innerHTML = `
+        <div class="text-slate-500 text-center py-8 text-xs">Terminal cleared.</div>
+      `;
     }
 
     function switchTab(tab) {
       const tabs = ['report', 'evidence', 'raw'];
       tabs.forEach(t => {
         document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.add('hidden');
-        document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`).className = 'text-xs font-semibold px-3 py-1.5 rounded-lg bg-gray-800 text-gray-400 hover:text-gray-200 transition';
+        document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`).className = 
+          'text-xs font-semibold px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition flex items-center gap-1.5';
       });
 
       document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.remove('hidden');
-      document.getElementById(`tabBtn${tab.charAt(0).toUpperCase() + tab.slice(1)}`).className = 'text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white transition';
+      document.getElementById(`tabBtn${tab.charAt(0).toUpperCase() + tab.slice(1)}`).className = 
+        'text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white transition flex items-center gap-1.5';
     }
 
     function addLog(title, details, type = 'info') {
       const feed = document.getElementById('terminalFeed');
+      
+      // If placeholder exists, remove it
+      if (feed.querySelector('.text-slate-500.text-center')) {
+        feed.innerHTML = '';
+      }
+
       const item = document.createElement('div');
       
-      let borderCol = 'border-indigo-800';
+      let borderCol = 'border-indigo-500/60 bg-indigo-950/20';
       let icon = 'fa-arrow-right text-indigo-400';
-      if (type === 'tool') { borderCol = 'border-cyan-800'; icon = 'fa-wrench text-cyan-400'; }
-      if (type === 'success') { borderCol = 'border-emerald-800'; icon = 'fa-check text-emerald-400'; }
-      if (type === 'warn') { borderCol = 'border-amber-800'; icon = 'fa-triangle-exclamation text-amber-400'; }
-      if (type === 'error') { borderCol = 'border-rose-800'; icon = 'fa-xmark text-rose-400'; }
+      if (type === 'tool') { borderCol = 'border-cyan-500/60 bg-cyan-950/20'; icon = 'fa-screwdriver-wrench text-cyan-400'; }
+      if (type === 'success') { borderCol = 'border-emerald-500/60 bg-emerald-950/20'; icon = 'fa-check text-emerald-400'; }
+      if (type === 'warn') { borderCol = 'border-amber-500/60 bg-amber-950/20'; icon = 'fa-triangle-exclamation text-amber-400'; }
+      if (type === 'error') { borderCol = 'border-rose-500/60 bg-rose-950/20'; icon = 'fa-xmark text-rose-400'; }
 
-      item.className = `p-2.5 rounded bg-gray-900/90 border-l-2 ${borderCol} flex flex-col space-y-1 shadow`;
+      item.className = `p-2.5 rounded-xl border-l-2 ${borderCol} flex flex-col space-y-1 transition`;
       item.innerHTML = `
-        <div class="flex items-center justify-between text-gray-300">
-          <span class="font-bold flex items-center gap-1.5"><i class="fa-solid ${icon}"></i> ${title}</span>
-          <span class="text-[10px] text-gray-500">${new Date().toLocaleTimeString()}</span>
+        <div class="flex items-center justify-between text-slate-200">
+          <span class="font-semibold flex items-center gap-2 text-xs">
+            <i class="fa-solid ${icon}"></i>
+            <span>${title}</span>
+          </span>
+          <span class="text-[10px] text-slate-500">${new Date().toLocaleTimeString()}</span>
         </div>
-        ${details ? `<div class="text-gray-400 text-[11px] whitespace-pre-wrap mt-0.5">${details}</div>` : ''}
+        ${details ? `<div class="text-slate-400 text-[11px] whitespace-pre-wrap pl-5 font-mono">${details}</div>` : ''}
       `;
       feed.appendChild(item);
       feed.scrollTop = feed.scrollHeight;
@@ -248,7 +555,10 @@
     async function startResearch() {
       const task = document.getElementById('taskInput').value.trim();
       const role = document.getElementById('userRole').value;
-      if (!task) return alert('Please enter a research query.');
+      if (!task) {
+        document.getElementById('taskInput').focus();
+        return;
+      }
 
       const startBtn = document.getElementById('startBtn');
       startBtn.disabled = true;
@@ -256,10 +566,22 @@
 
       const feed = document.getElementById('terminalFeed');
       feed.innerHTML = '';
-      addLog('Initialization', `Task: "${task}" (Role: ${role})`);
+      addLog('Initialization', `Directive: "${task}"\nAuthorized Role: ${role}`);
 
       document.getElementById('runBadge').innerText = 'RUNNING';
-      document.getElementById('runBadge').className = 'text-xs font-mono px-2 py-0.5 rounded bg-indigo-950 text-indigo-400 animate-pulse';
+      document.getElementById('runBadge').className = 'text-[11px] font-mono px-2 py-0.5 rounded-md bg-indigo-950 text-indigo-300 border border-indigo-700/60 animate-pulse';
+
+      // Switch to report tab and show loading
+      switchTab('report');
+      document.getElementById('reportContainer').innerHTML = `
+        <div class="text-center py-24 text-slate-400 flex flex-col items-center justify-center space-y-3">
+          <div class="w-12 h-12 rounded-xl bg-indigo-950/60 border border-indigo-700/50 flex items-center justify-center text-indigo-400 text-lg">
+            <i class="fa-solid fa-brain animate-pulse"></i>
+          </div>
+          <p class="font-medium">Autonomous investigation in progress...</p>
+          <p class="text-xs text-slate-500 max-w-sm">Gathering cross-verified evidence items and executing policy-bounded tool calls.</p>
+        </div>
+      `;
 
       try {
         const res = await fetch('/api/v1/runs', {
@@ -382,8 +704,8 @@
       const isSuccess = data.status === 'completed';
       document.getElementById('runBadge').innerText = data.status.toUpperCase();
       document.getElementById('runBadge').className = isSuccess 
-        ? 'text-xs font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400'
-        : 'text-xs font-mono px-2 py-0.5 rounded bg-rose-950 text-rose-400';
+        ? 'text-[11px] font-mono px-2 py-0.5 rounded-md bg-emerald-950 text-emerald-300 border border-emerald-700/60'
+        : 'text-[11px] font-mono px-2 py-0.5 rounded-md bg-rose-950 text-rose-300 border border-rose-700/60';
 
       if (data.error) {
         addLog('Run Failed', data.error, 'error');
@@ -398,19 +720,24 @@
 
       // 1. Render Markdown Report
       const content = data.markdown_report || data.final_report;
+      currentRawReport = content || '';
+      
       if (content) {
         document.getElementById('reportContainer').innerHTML = marked.parse(content);
       } else if (data.error) {
         document.getElementById('reportContainer').innerHTML = `
-          <div class="p-4 rounded-lg bg-rose-950/50 border border-rose-800 text-rose-200">
-            <h3 class="font-bold mb-1"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i> Execution Error</h3>
-            <p class="font-mono text-xs">${data.error}</p>
+          <div class="p-5 rounded-2xl bg-rose-950/40 border border-rose-800 text-rose-200">
+            <h3 class="font-bold text-sm mb-1.5 flex items-center gap-2">
+              <i class="fa-solid fa-triangle-exclamation text-rose-400"></i>
+              <span>Investigation Interrupted</span>
+            </h3>
+            <p class="font-mono text-xs text-rose-300">${data.error}</p>
           </div>
         `;
       } else {
         document.getElementById('reportContainer').innerHTML = `
-          <div class="text-center py-20 text-gray-500">
-            <i class="fa-solid fa-circle-notch fa-spin text-4xl mb-3 text-indigo-400"></i>
+          <div class="text-center py-20 text-slate-400">
+            <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3 text-indigo-400"></i>
             <p>Synthesizing verified report...</p>
           </div>
         `;
@@ -418,9 +745,10 @@
 
       // 2. Render Grounding Score Badge
       const badge = document.getElementById('groundingBadge');
+      const badgeText = document.getElementById('groundingBadgeText');
       if (data.grounding_score !== null && data.grounding_score !== undefined) {
         badge.classList.remove('hidden');
-        badge.innerText = `Audit: ${data.audit_passed ? 'VERIFIED' : 'UNVERIFIED'} (${Math.round(data.grounding_score * 100)}% Grounded)`;
+        badgeText.innerText = `Audit: ${data.audit_passed ? 'VERIFIED' : 'UNVERIFIED'} (${Math.round(data.grounding_score * 100)}% Grounded)`;
       } else {
         badge.classList.add('hidden');
       }
@@ -431,19 +759,22 @@
       if (data.evidence && data.evidence.length > 0) {
         data.evidence.forEach((ev, idx) => {
           const card = document.createElement('div');
-          card.className = 'p-3 rounded-lg bg-gray-900 border border-gray-800 text-xs font-mono';
+          card.className = 'p-4 rounded-xl bg-slate-900/90 border border-slate-800/80 text-xs font-mono space-y-2';
           card.innerHTML = `
-            <div class="flex items-center justify-between text-indigo-400 font-bold mb-1">
-              <span>[${idx + 1}] ${ev.tool_name}</span>
-              <span class="px-1.5 py-0.5 rounded text-[10px] ${ev.trust_level === 'trusted' ? 'bg-emerald-950 text-emerald-400' : 'bg-amber-950 text-amber-400'}">${ev.trust_level}</span>
+            <div class="flex items-center justify-between text-indigo-400 font-semibold">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-quote-left text-slate-500"></i>
+                <span>[${idx + 1}] ${ev.tool_name}</span>
+              </span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] ${ev.trust_level === 'trusted' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-amber-950 text-amber-400 border border-amber-800'}">${ev.trust_level}</span>
             </div>
-            <p class="text-gray-300 font-sans text-xs mb-2">"${ev.excerpt}"</p>
-            ${ev.source_url ? `<a href="${ev.source_url}" target="_blank" class="text-indigo-400 underline truncate block">${ev.source_url}</a>` : ''}
+            <p class="text-slate-300 font-sans text-xs leading-relaxed">"${ev.excerpt}"</p>
+            ${ev.source_url ? `<a href="${ev.source_url}" target="_blank" class="text-indigo-400 hover:text-indigo-300 underline truncate block text-[11px]"><i class="fa-solid fa-link text-[10px] mr-1"></i>${ev.source_url}</a>` : ''}
           `;
           evContainer.appendChild(card);
         });
       } else {
-        evContainer.innerHTML = '<div class="text-center py-20 text-gray-500">No empirical evidence gathered.</div>';
+        evContainer.innerHTML = '<div class="text-center py-20 text-slate-500">No empirical evidence gathered.</div>';
       }
 
       // 4. Render Raw JSON
@@ -462,13 +793,13 @@
           runs.forEach(r => {
             const opt = document.createElement('option');
             opt.value = r.run_id;
-            const shortTask = (r.task || 'Run').length > 30 ? (r.task || 'Run').slice(0, 30) + '...' : (r.task || 'Run');
+            const shortTask = (r.task || 'Run').length > 25 ? (r.task || 'Run').slice(0, 25) + '...' : (r.task || 'Run');
             opt.text = `${r.status === 'completed' ? '✓' : '✗'} ${shortTask} (${r.run_id.slice(-6)})`;
             if (r.run_id === currentRunId) opt.selected = true;
             sel.appendChild(opt);
           });
 
-          // If no active run rendered yet, render latest completed run
+          // Auto-render latest completed run if nothing is on screen
           if (!currentRunId) {
             const completed = runs.filter(r => r.status === 'completed' && (r.markdown_report || r.final_report));
             if (completed.length > 0) {
@@ -477,7 +808,7 @@
               renderRunData(latest);
               document.getElementById('taskInput').value = latest.task || '';
               document.getElementById('runBadge').innerText = 'COMPLETED';
-              document.getElementById('runBadge').className = 'text-xs font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400';
+              document.getElementById('runBadge').className = 'text-[11px] font-mono px-2 py-0.5 rounded-md bg-emerald-950 text-emerald-300 border border-emerald-700/60';
               addLog('Session Restored', `Loaded latest completed run: "${latest.task}"`, 'success');
               sel.value = latest.run_id;
             }
@@ -498,11 +829,21 @@
         if (data.task) document.getElementById('taskInput').value = data.task;
         document.getElementById('runBadge').innerText = data.status.toUpperCase();
         document.getElementById('runBadge').className = data.status === 'completed' 
-          ? 'text-xs font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400'
-          : 'text-xs font-mono px-2 py-0.5 rounded bg-rose-950 text-rose-400';
+          ? 'text-[11px] font-mono px-2 py-0.5 rounded-md bg-emerald-950 text-emerald-300 border border-emerald-700/60'
+          : 'text-[11px] font-mono px-2 py-0.5 rounded-md bg-rose-950 text-rose-300 border border-rose-700/60';
       } catch (e) {
         console.error("Failed to load run:", e);
       }
+    }
+
+    function copyReport() {
+      if (!currentRawReport) return;
+      navigator.clipboard.writeText(currentRawReport).then(() => {
+        const btnText = document.getElementById('copyBtnText');
+        const originalText = btnText.innerText;
+        btnText.innerText = 'Copied!';
+        setTimeout(() => { btnText.innerText = originalText; }, 2000);
+      });
     }
 
     window.addEventListener('DOMContentLoaded', loadRunHistory);
