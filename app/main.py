@@ -5,6 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from app.api.v1.approvals import router as approvals_router
 from app.api.v1.health import router as health_router
 from app.core.config import settings
 from app.core.errors import ARAAError, araa_exception_handler
@@ -58,6 +59,7 @@ def create_app() -> FastAPI:
     # Routers
     app.include_router(health_router)
     app.include_router(health_router, prefix="/api/v1")
+    app.include_router(approvals_router, prefix="/api/v1")
 
     return app
 
