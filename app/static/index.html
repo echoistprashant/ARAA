@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark" data-theme="sapphire">
+<html lang="en" data-theme="snow">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -17,7 +17,6 @@
   
   <script>
     tailwind.config = {
-      darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
@@ -30,110 +29,144 @@
   </script>
   
   <style>
-    /* THEME DEFINITIONS VIA CSS CUSTOM VARIABLES */
-    :root, [data-theme="sapphire"] {
-      --bg-body: #040711;
-      --bg-card: rgba(10, 16, 31, 0.85);
-      --border-card: rgba(255, 255, 255, 0.08);
-      --border-card-hover: rgba(56, 189, 248, 0.4);
+    /* LIGHT MODE THEME DEFINITIONS VIA CSS VARIABLES */
+    :root, [data-theme="snow"] {
+      --bg-body: #f8fafc;
+      --bg-card: rgba(255, 255, 255, 0.95);
+      --bg-input: #ffffff;
+      --border-card: #e2e8f0;
+      --border-card-hover: #38bdf8;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --text-body: #334155;
       --accent-primary: #0284c7;
       --accent-gradient: linear-gradient(135deg, #0284c7, #2563eb);
-      --accent-glow: rgba(2, 132, 199, 0.2);
-      --accent-text: #38bdf8;
-      --accent-subtle: rgba(14, 165, 233, 0.12);
-      --accent-border: rgba(56, 189, 248, 0.35);
-      --ambient-1: rgba(2, 132, 199, 0.12);
-      --ambient-2: rgba(37, 99, 235, 0.08);
-      --highlight: #38bdf8;
+      --accent-glow: rgba(2, 132, 199, 0.12);
+      --accent-text: #0284c7;
+      --accent-subtle: #f0f9ff;
+      --accent-border: #bae6fd;
+      --ambient-1: rgba(2, 132, 199, 0.05);
+      --ambient-2: rgba(37, 99, 235, 0.04);
+      --highlight: #0284c7;
+      --table-header: #f1f5f9;
+      --table-border: #e2e8f0;
+      --code-bg: #f1f5f9;
+      --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
     }
 
-    [data-theme="emerald"] {
-      --bg-body: #020906;
-      --bg-card: rgba(5, 22, 15, 0.85);
-      --border-card: rgba(255, 255, 255, 0.08);
-      --border-card-hover: rgba(52, 211, 153, 0.4);
+    [data-theme="linen"] {
+      --bg-body: #faf8f5;
+      --bg-card: rgba(255, 255, 255, 0.95);
+      --bg-input: #ffffff;
+      --border-card: #e7e2da;
+      --border-card-hover: #d97706;
+      --text-main: #1c1917;
+      --text-muted: #78716c;
+      --text-body: #44403c;
+      --accent-primary: #d97706;
+      --accent-gradient: linear-gradient(135deg, #d97706, #b45309);
+      --accent-glow: rgba(217, 119, 6, 0.12);
+      --accent-text: #b45309;
+      --accent-subtle: #fffbeb;
+      --accent-border: #fde68a;
+      --ambient-1: rgba(217, 119, 6, 0.05);
+      --ambient-2: rgba(180, 83, 9, 0.04);
+      --highlight: #b45309;
+      --table-header: #f5f2eb;
+      --table-border: #e7e2da;
+      --code-bg: #f5f2eb;
+      --card-shadow: 0 4px 20px -2px rgba(120, 80, 20, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+    }
+
+    [data-theme="sage"] {
+      --bg-body: #f2f8f5;
+      --bg-card: rgba(255, 255, 255, 0.95);
+      --bg-input: #ffffff;
+      --border-card: #d1e7dd;
+      --border-card-hover: #059669;
+      --text-main: #064e3b;
+      --text-muted: #047857;
+      --text-body: #134e4a;
       --accent-primary: #059669;
       --accent-gradient: linear-gradient(135deg, #059669, #10b981);
-      --accent-glow: rgba(16, 185, 129, 0.2);
-      --accent-text: #34d399;
-      --accent-subtle: rgba(16, 185, 129, 0.12);
-      --accent-border: rgba(52, 211, 153, 0.35);
-      --ambient-1: rgba(16, 185, 129, 0.12);
-      --ambient-2: rgba(5, 150, 105, 0.08);
-      --highlight: #34d399;
+      --accent-glow: rgba(5, 150, 105, 0.12);
+      --accent-text: #059669;
+      --accent-subtle: #ecfdf5;
+      --accent-border: #a7f3d0;
+      --ambient-1: rgba(5, 150, 105, 0.05);
+      --ambient-2: rgba(16, 185, 129, 0.04);
+      --highlight: #059669;
+      --table-header: #e6f4ed;
+      --table-border: #d1e7dd;
+      --code-bg: #e6f4ed;
+      --card-shadow: 0 4px 20px -2px rgba(5, 150, 105, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
     }
 
-    [data-theme="amber"] {
-      --bg-body: #090806;
-      --bg-card: rgba(24, 20, 14, 0.85);
-      --border-card: rgba(255, 255, 255, 0.08);
-      --border-card-hover: rgba(251, 191, 36, 0.4);
-      --accent-primary: #d97706;
-      --accent-gradient: linear-gradient(135deg, #d97706, #f59e0b);
-      --accent-glow: rgba(245, 158, 11, 0.2);
-      --accent-text: #fbbf24;
-      --accent-subtle: rgba(245, 158, 11, 0.12);
-      --accent-border: rgba(251, 191, 36, 0.35);
-      --ambient-1: rgba(245, 158, 11, 0.12);
-      --ambient-2: rgba(217, 119, 6, 0.08);
-      --highlight: #fbbf24;
-    }
-
-    [data-theme="titanium"] {
-      --bg-body: #060607;
-      --bg-card: rgba(18, 18, 22, 0.85);
-      --border-card: rgba(255, 255, 255, 0.09);
-      --border-card-hover: rgba(255, 255, 255, 0.35);
-      --accent-primary: #52525b;
-      --accent-gradient: linear-gradient(135deg, #3f3f46, #71717a);
-      --accent-glow: rgba(255, 255, 255, 0.1);
-      --accent-text: #f4f4f5;
-      --accent-subtle: rgba(255, 255, 255, 0.08);
-      --accent-border: rgba(255, 255, 255, 0.25);
-      --ambient-1: rgba(255, 255, 255, 0.06);
-      --ambient-2: rgba(180, 180, 180, 0.04);
-      --highlight: #ffffff;
+    [data-theme="minimal"] {
+      --bg-body: #ffffff;
+      --bg-card: #ffffff;
+      --bg-input: #ffffff;
+      --border-card: #e4e4e7;
+      --border-card-hover: #18181b;
+      --text-main: #09090b;
+      --text-muted: #71717a;
+      --text-body: #27272a;
+      --accent-primary: #18181b;
+      --accent-gradient: linear-gradient(135deg, #18181b, #27272a);
+      --accent-glow: rgba(0, 0, 0, 0.08);
+      --accent-text: #09090b;
+      --accent-subtle: #f4f4f5;
+      --accent-border: #d4d4d8;
+      --ambient-1: rgba(0, 0, 0, 0.02);
+      --ambient-2: rgba(0, 0, 0, 0.01);
+      --highlight: #09090b;
+      --table-header: #f4f4f5;
+      --table-border: #e4e4e7;
+      --code-bg: #f4f4f5;
+      --card-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.06), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
     }
 
     body {
       background-color: var(--bg-body);
-      transition: background-color 0.3s ease;
+      color: var(--text-body);
+      transition: background-color 0.25s ease, color 0.25s ease;
     }
 
-    /* Custom Scrollbars */
-    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    /* Custom Scrollbars for Light Mode */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
-    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-    /* Glassmorphism styling */
-    .glass-card {
+    /* Cards styling */
+    .light-card {
       background: var(--bg-card);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--border-card);
+      box-shadow: var(--card-shadow);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .glass-card-hover:hover {
+    .light-card-hover:hover {
       border-color: var(--border-card-hover);
-      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6), 0 0 20px -2px var(--accent-glow);
+      box-shadow: 0 12px 30px -4px var(--accent-glow), 0 4px 12px -1px rgba(0, 0, 0, 0.05);
     }
 
-    /* Clean Markdown Editorial Styles */
+    /* Editorial Markdown for Light Mode */
     .report-prose {
-      color: #cbd5e1;
+      color: var(--text-body);
       font-size: 0.9375rem;
-      line-height: 1.75;
+      line-height: 1.8;
     }
     .report-prose h1 {
       font-size: 1.625rem;
       font-weight: 700;
-      color: var(--highlight);
+      color: var(--text-main);
       letter-spacing: -0.025em;
       margin-top: 1.5rem;
       margin-bottom: 0.875rem;
       padding-bottom: 0.5rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: 1px solid var(--border-card);
     }
     .report-prose h2 {
       font-size: 1.25rem;
@@ -149,29 +182,29 @@
     .report-prose h3 {
       font-size: 1.0625rem;
       font-weight: 600;
-      color: #e2e8f0;
+      color: var(--text-main);
       margin-top: 1.25rem;
       margin-bottom: 0.5rem;
     }
     .report-prose p {
       margin-bottom: 1rem;
-      color: #94a3b8;
+      color: var(--text-body);
     }
     .report-prose strong {
-      color: #f1f5f9;
+      color: var(--text-main);
       font-weight: 600;
     }
     .report-prose ul {
       list-style-type: disc;
       margin-left: 1.35rem;
       margin-bottom: 1rem;
-      color: #cbd5e1;
+      color: var(--text-body);
     }
     .report-prose ol {
       list-style-type: decimal;
       margin-left: 1.35rem;
       margin-bottom: 1rem;
-      color: #cbd5e1;
+      color: var(--text-body);
     }
     .report-prose li {
       margin-bottom: 0.35rem;
@@ -189,19 +222,20 @@
     .report-prose code {
       font-family: 'JetBrains Mono', monospace;
       font-size: 0.825rem;
-      background: rgba(30, 41, 59, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 0.15rem 0.4rem;
-      border-radius: 0.25rem;
-      color: var(--accent-text);
+      background: var(--code-bg);
+      border: 1px solid var(--border-card);
+      padding: 0.15rem 0.45rem;
+      border-radius: 0.3rem;
+      color: var(--accent-primary);
     }
     .report-prose pre {
-      background: #04060b;
+      background: #0f172a;
       border: 1px solid #1e293b;
       padding: 1rem;
       border-radius: 0.5rem;
       overflow-x: auto;
       margin-bottom: 1.25rem;
+      color: #f8fafc;
     }
     .report-prose table {
       width: 100%;
@@ -210,36 +244,37 @@
       margin-top: 1rem;
       margin-bottom: 1.5rem;
       font-size: 0.85rem;
-      border: 1px solid #1e293b;
+      border: 1px solid var(--table-border);
       border-radius: 0.5rem;
       overflow: hidden;
+      background: #ffffff;
     }
     .report-prose th {
-      background: #0b1120;
-      color: #94a3b8;
+      background: var(--table-header);
+      color: var(--text-muted);
       font-weight: 600;
       text-transform: uppercase;
       font-size: 0.72rem;
       letter-spacing: 0.05em;
-      padding: 0.65rem 0.875rem;
-      border-bottom: 1px solid #1e293b;
+      padding: 0.75rem 0.875rem;
+      border-bottom: 1px solid var(--table-border);
       text-align: left;
     }
     .report-prose td {
-      padding: 0.65rem 0.875rem;
-      border-bottom: 1px solid #1e293b;
-      color: #cbd5e1;
+      padding: 0.75rem 0.875rem;
+      border-bottom: 1px solid var(--table-border);
+      color: var(--text-body);
     }
     .report-prose tr:last-child td {
       border-bottom: none;
     }
     .report-prose tr:hover td {
-      background: rgba(30, 41, 59, 0.4);
+      background: rgba(0, 0, 0, 0.02);
     }
     .report-prose hr {
       border: 0;
       height: 1px;
-      background: rgba(255, 255, 255, 0.08);
+      background: var(--border-card);
       margin: 1.5rem 0;
     }
 
@@ -252,7 +287,7 @@
     }
   </style>
 </head>
-<body class="text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
+<body class="min-h-screen flex flex-col font-sans antialiased selection:bg-sky-500/20 selection:text-sky-900">
 
   <!-- Background Ambient Glows -->
   <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
@@ -261,51 +296,51 @@
   </div>
 
   <!-- Top Navigation Header -->
-  <header class="sticky top-0 z-50 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl transition-all">
+  <header class="sticky top-0 z-50 border-b bg-white/90 backdrop-blur-xl shadow-sm transition-all" style="border-color: var(--border-card);">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
       
       <!-- Brand & Title -->
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-3">
-          <div class="relative flex items-center justify-center w-9 h-9 rounded-xl p-[1px] shadow-lg shadow-cyan-500/20" style="background: var(--accent-gradient);">
-            <div class="w-full h-full bg-slate-950 rounded-[11px] flex items-center justify-center">
-              <i class="fa-solid fa-atom text-base pulse-glow" style="color: var(--accent-text);"></i>
+          <div class="relative flex items-center justify-center w-9 h-9 rounded-xl shadow-md p-[1px]" style="background: var(--accent-gradient);">
+            <div class="w-full h-full bg-white rounded-[11px] flex items-center justify-center">
+              <i class="fa-solid fa-atom text-base pulse-glow" style="color: var(--accent-primary);"></i>
             </div>
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <span class="font-bold text-base tracking-tight text-white">ARAA</span>
-              <span class="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full border" 
+              <span class="font-bold text-base tracking-tight" style="color: var(--text-main);">ARAA</span>
+              <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full border" 
                     style="background: var(--accent-subtle); color: var(--accent-text); border-color: var(--accent-border);">v1.0 Pro</span>
             </div>
-            <p class="text-[11px] text-slate-400 hidden sm:block">Autonomous Research & Analysis Agent</p>
+            <p class="text-[11px] text-slate-500 hidden sm:block">Autonomous Research & Analysis Agent</p>
           </div>
         </div>
 
         <!-- Mobile Jump Navigation -->
         <div class="flex items-center gap-1 md:hidden">
-          <a href="#directivePanel" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white">Query</a>
-          <a href="#reportPanel" class="text-xs px-2.5 py-1 rounded-lg border text-white" style="background: var(--accent-primary); border-color: var(--accent-border);">Report</a>
+          <a href="#directivePanel" class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 hover:text-black">Query</a>
+          <a href="#reportPanel" class="text-xs px-2.5 py-1 rounded-lg text-white font-medium" style="background: var(--accent-primary);">Report</a>
         </div>
       </div>
 
-      <!-- Right Header Actions: Theme Switcher & System Vitals -->
+      <!-- Right Header Actions: Light Theme Switcher & System Vitals -->
       <div class="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 text-xs font-mono scrollbar-none">
         
-        <!-- Interactive Theme Palette Switcher -->
-        <div class="flex items-center space-x-1 px-2.5 py-1 rounded-full bg-slate-900/90 border border-slate-700/80 text-xs text-slate-300 shrink-0">
-          <i class="fa-solid fa-palette text-[11px]" style="color: var(--accent-text);"></i>
-          <span class="text-[11px] text-slate-400 hidden sm:inline">Theme:</span>
-          <select id="themeSelector" onchange="changeTheme(this.value)" class="bg-transparent text-xs text-slate-200 font-semibold focus:outline-none cursor-pointer">
-            <option value="sapphire">🔷 Sapphire Ocean</option>
-            <option value="emerald">🟢 Emerald Matrix</option>
-            <option value="amber">🟡 Cyber Amber</option>
-            <option value="titanium">⚪ Titanium Mono</option>
+        <!-- Light Theme Palette Switcher -->
+        <div class="flex items-center space-x-1 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-300 text-xs text-slate-700 shrink-0">
+          <i class="fa-solid fa-sun text-[11px] text-amber-500"></i>
+          <span class="text-[11px] text-slate-500 hidden sm:inline">Theme:</span>
+          <select id="themeSelector" onchange="changeTheme(this.value)" class="bg-transparent text-xs text-slate-800 font-semibold focus:outline-none cursor-pointer">
+            <option value="snow">☀️ Clean Snow (Default)</option>
+            <option value="linen">🌾 Warm Linen (Cream)</option>
+            <option value="sage">🍃 Emerald Sage (Mint)</option>
+            <option value="minimal">⚪ Minimal Pure (White)</option>
           </select>
         </div>
 
-        <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 shrink-0">
-          <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 shrink-0">
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
           <span>Docker Cluster</span>
         </div>
 
@@ -315,12 +350,12 @@
           <span>Gemini 3.5</span>
         </div>
 
-        <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-700 text-slate-300 shrink-0">
-          <i class="fa-solid fa-shield-halved text-[11px] text-emerald-400"></i>
-          <span>Anti-SSRF/TOCTOU</span>
+        <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 shrink-0">
+          <i class="fa-solid fa-shield-halved text-[11px] text-emerald-600"></i>
+          <span>Anti-SSRF</span>
         </div>
 
-        <div class="px-2.5 py-1 rounded-full bg-amber-950/40 border border-amber-800/40 text-amber-300 font-semibold shrink-0">
+        <div class="px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 font-semibold shrink-0">
           <span>$0.00 Cost</span>
         </div>
 
@@ -336,19 +371,19 @@
     <section id="directivePanel" class="lg:col-span-5 flex flex-col space-y-5">
       
       <!-- Card 1: Research Directive Control Panel -->
-      <div class="glass-card glass-card-hover rounded-2xl p-5 shadow-xl">
+      <div class="light-card light-card-hover rounded-2xl p-5 sm:p-6">
         
         <!-- Header & Role Selector -->
         <div class="flex items-center justify-between mb-3.5">
-          <label class="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-            <i class="fa-solid fa-compass text-sm" style="color: var(--accent-text);"></i>
+          <label class="text-xs font-semibold uppercase tracking-wider flex items-center gap-2" style="color: var(--text-main);">
+            <i class="fa-solid fa-compass text-sm" style="color: var(--accent-primary);"></i>
             <span>Research Directive</span>
           </label>
           
-          <div class="flex items-center space-x-1.5 bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1">
-            <i class="fa-solid fa-user-shield text-[10px]" style="color: var(--accent-text);"></i>
-            <span class="text-[11px] text-slate-400">Role:</span>
-            <select id="userRole" class="bg-transparent text-xs text-slate-200 font-medium focus:outline-none cursor-pointer">
+          <div class="flex items-center space-x-1.5 bg-slate-100 border border-slate-200 rounded-lg px-2 py-1">
+            <i class="fa-solid fa-user-shield text-[10px]" style="color: var(--accent-primary);"></i>
+            <span class="text-[11px] text-slate-500">Role:</span>
+            <select id="userRole" class="bg-transparent text-xs text-slate-800 font-medium focus:outline-none cursor-pointer">
               <option value="researcher" selected>Researcher</option>
               <option value="operator">Operator</option>
               <option value="admin">Admin</option>
@@ -360,37 +395,38 @@
         <!-- Input Box -->
         <div class="relative">
           <textarea id="taskInput" rows="3" 
-            class="w-full bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/40 transition resize-none leading-relaxed" 
+            class="w-full bg-white border border-slate-300 rounded-xl p-3.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 transition resize-none leading-relaxed shadow-inner" 
+            style="focus:border-color: var(--accent-primary);"
             placeholder="What would you like ARAA to investigate autonomously?"></textarea>
           
-          <div class="absolute bottom-2.5 right-3 text-[10px] text-slate-500 font-mono hidden sm:block">
+          <div class="absolute bottom-2.5 right-3 text-[10px] text-slate-400 font-mono hidden sm:block">
             <span>Ctrl + Enter to run</span>
           </div>
         </div>
 
         <!-- Suggestion Pills -->
         <div class="mt-3.5 flex flex-wrap gap-1.5 items-center">
-          <span class="text-[11px] text-slate-500 mr-1"><i class="fa-solid fa-bolt text-[10px] text-amber-400 mr-1"></i>Try:</span>
+          <span class="text-[11px] text-slate-500 mr-1"><i class="fa-solid fa-bolt text-[10px] text-amber-500 mr-1"></i>Try:</span>
           
           <button onclick="setQuery('What company manufactures Twinscan EXE:5000 and who is its primary customer?')" 
-            class="text-xs px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition flex items-center gap-1.5">
+            class="text-xs px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-black transition flex items-center gap-1.5 shadow-sm">
             <span>🔬 ASML Lithography</span>
           </button>
           
           <button onclick="setQuery('Calculate the compound interest on $50,000 at 7.5% annual rate for 5 years.')" 
-            class="text-xs px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition flex items-center gap-1.5">
+            class="text-xs px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-black transition flex items-center gap-1.5 shadow-sm">
             <span>🧮 Compound Math</span>
           </button>
           
           <button onclick="setQuery('What are the top challenges software engineers face in 2026?')" 
-            class="text-xs px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition flex items-center gap-1.5">
+            class="text-xs px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-black transition flex items-center gap-1.5 shadow-sm">
             <span>💻 Software Eng 2026</span>
           </button>
         </div>
 
         <!-- Primary Action Button -->
         <button id="startBtn" onclick="startResearch()" 
-          class="mt-4 w-full h-11 text-white font-semibold rounded-xl shadow-lg flex items-center justify-center space-x-2 transition active:scale-[0.99] cursor-pointer"
+          class="mt-4 w-full h-11 text-white font-semibold rounded-xl shadow-md hover:shadow-lg flex items-center justify-center space-x-2 transition active:scale-[0.99] cursor-pointer"
           style="background: var(--accent-gradient);">
           <i class="fa-solid fa-play text-xs"></i>
           <span>Launch Autonomous Investigation</span>
@@ -398,51 +434,51 @@
 
       </div>
 
-      <!-- Card 2: Live Agent Trajectory Terminal -->
-      <div class="glass-card glass-card-hover rounded-2xl p-5 flex flex-col shadow-xl min-h-[350px] lg:flex-1">
+      <!-- Card 2: Live Agent Trajectory Activity Feed -->
+      <div class="light-card light-card-hover rounded-2xl p-5 sm:p-6 flex flex-col min-h-[350px] lg:flex-1">
         
         <!-- Terminal Header -->
-        <div class="flex items-center justify-between pb-3 border-b border-slate-800/80">
+        <div class="flex items-center justify-between pb-3 border-b" style="border-color: var(--border-card);">
           <div class="flex items-center space-x-2">
             <span class="relative flex h-2 w-2">
               <span id="terminalPulse" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            <span class="text-xs font-mono font-semibold uppercase tracking-wider text-slate-300">Agent Trajectory</span>
+            <span class="text-xs font-mono font-semibold uppercase tracking-wider" style="color: var(--text-main);">Agent Trajectory</span>
           </div>
 
           <div class="flex items-center gap-2">
-            <button onclick="clearTerminal()" title="Clear logs" class="text-slate-500 hover:text-slate-300 text-xs transition">
+            <button onclick="clearTerminal()" title="Clear logs" class="text-slate-400 hover:text-slate-600 text-xs transition">
               <i class="fa-solid fa-eraser"></i>
             </button>
-            <span id="runBadge" class="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-900 text-slate-400 border border-slate-800">IDLE</span>
+            <span id="runBadge" class="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200 font-semibold">IDLE</span>
           </div>
         </div>
 
         <!-- Terminal Feed -->
         <div id="terminalFeed" class="flex-1 overflow-y-auto mt-3.5 space-y-2 font-mono text-xs pr-1 max-h-[380px] lg:max-h-none">
-          <div class="text-slate-500 text-center py-10 flex flex-col items-center justify-center space-y-2">
-            <i class="fa-solid fa-terminal text-2xl text-slate-700"></i>
+          <div class="text-slate-400 text-center py-12 flex flex-col items-center justify-center space-y-2">
+            <i class="fa-solid fa-compass text-2xl text-slate-300"></i>
             <p>Ready to dispatch. Submit directive above.</p>
           </div>
         </div>
 
         <!-- Human In The Loop (HITL) Approval Modal / Banner -->
-        <div id="hitlBanner" class="hidden mt-4 p-4 rounded-xl bg-amber-950/60 border border-amber-600/80 text-amber-200 backdrop-blur-md">
+        <div id="hitlBanner" class="hidden mt-4 p-4 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 shadow-sm">
           <div class="flex items-start gap-2.5">
-            <i class="fa-solid fa-shield-halved text-amber-400 text-base mt-0.5"></i>
+            <i class="fa-solid fa-shield-halved text-amber-600 text-base mt-0.5"></i>
             <div class="flex-1">
-              <p class="font-bold text-xs text-amber-300 uppercase tracking-wide">Human Authorization Required</p>
-              <p id="hitlDetails" class="text-xs text-amber-200 mt-1"></p>
+              <p class="font-bold text-xs text-amber-800 uppercase tracking-wide">Human Authorization Required</p>
+              <p id="hitlDetails" class="text-xs text-amber-700 mt-1"></p>
             </div>
           </div>
           <div class="mt-3.5 flex space-x-2">
             <button onclick="resolveApproval('approve')" 
-              class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-1.5 px-3 rounded-lg text-xs transition flex items-center justify-center gap-1.5 shadow">
+              class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 px-3 rounded-lg text-xs transition flex items-center justify-center gap-1.5 shadow">
               <i class="fa-solid fa-check"></i> Authorize
             </button>
             <button onclick="resolveApproval('reject')" 
-              class="flex-1 bg-rose-700 hover:bg-rose-600 text-white font-semibold py-1.5 px-3 rounded-lg text-xs transition flex items-center justify-center gap-1.5 shadow">
+              class="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-semibold py-1.5 px-3 rounded-lg text-xs transition flex items-center justify-center gap-1.5 shadow">
               <i class="fa-solid fa-xmark"></i> Deny
             </button>
           </div>
@@ -454,26 +490,26 @@
 
     <!-- RIGHT COLUMN: Verified Research Report & Inspector (7 Cols Desktop) -->
     <section id="reportPanel" class="lg:col-span-7 flex flex-col space-y-5">
-      <div class="glass-card glass-card-hover rounded-2xl p-5 sm:p-6 flex-1 flex flex-col shadow-xl min-h-[550px]">
+      <div class="light-card light-card-hover rounded-2xl p-5 sm:p-6 flex-1 flex flex-col min-h-[550px]">
         
         <!-- Controls Bar: Tabs & Actions -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-800/80 gap-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b gap-3" style="border-color: var(--border-card);">
           
           <!-- View Switcher Tabs -->
-          <div class="flex items-center space-x-1.5 bg-slate-900/90 border border-slate-800 p-1 rounded-xl w-fit">
+          <div class="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl w-fit border border-slate-200">
             <button onclick="switchTab('report')" id="tabBtnReport" 
-              class="text-xs font-semibold px-3 py-1.5 rounded-lg text-white transition flex items-center gap-1.5"
+              class="text-xs font-semibold px-3 py-1.5 rounded-lg text-white transition flex items-center gap-1.5 shadow-sm"
               style="background: var(--accent-primary);">
               <i class="fa-solid fa-file-lines text-[11px]"></i>
               <span>Report</span>
             </button>
             <button onclick="switchTab('evidence')" id="tabBtnEvidence" 
-              class="text-xs font-semibold px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition flex items-center gap-1.5">
+              class="text-xs font-semibold px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5">
               <i class="fa-solid fa-database text-[11px]"></i>
               <span>Evidence</span>
             </button>
             <button onclick="switchTab('raw')" id="tabBtnRaw" 
-              class="text-xs font-semibold px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition flex items-center gap-1.5">
+              class="text-xs font-semibold px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5">
               <i class="fa-solid fa-code text-[11px]"></i>
               <span>Audit JSON</span>
             </button>
@@ -484,20 +520,20 @@
             
             <!-- History Selector -->
             <select id="runHistorySelect" onchange="selectPastRun(this.value)" 
-              class="text-xs bg-slate-900 border border-slate-700 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-cyan-500 max-w-[180px] sm:max-w-[220px] truncate cursor-pointer">
+              class="text-xs bg-white border border-slate-300 text-slate-800 font-medium rounded-lg px-2.5 py-1.5 focus:outline-none max-w-[180px] sm:max-w-[220px] truncate cursor-pointer shadow-sm">
               <option value="">-- Past Runs --</option>
             </select>
 
             <!-- Copy Markdown Button -->
             <button id="copyBtn" onclick="copyReport()" title="Copy Markdown to Clipboard" 
-              class="text-xs px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white transition flex items-center gap-1">
+              class="text-xs px-2.5 py-1.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 hover:text-black transition flex items-center gap-1 shadow-sm">
               <i class="fa-regular fa-copy"></i>
               <span id="copyBtnText" class="hidden sm:inline">Copy</span>
             </button>
 
             <!-- Grounding Badge -->
             <div id="groundingBadge" 
-              class="hidden text-[11px] font-mono font-medium px-2.5 py-1 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-700/60 flex items-center gap-1.5">
+              class="hidden text-[11px] font-mono font-semibold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-300 flex items-center gap-1.5 shadow-sm">
               <i class="fa-solid fa-check-double text-[10px]"></i>
               <span id="groundingBadgeText">VERIFIED</span>
             </div>
@@ -509,11 +545,11 @@
         <!-- TAB 1: Rendered Markdown Report -->
         <div id="tabReport" class="flex-1 overflow-y-auto mt-4 pr-1">
           <div id="reportContainer" class="report-prose">
-            <div class="text-center py-24 text-slate-500 flex flex-col items-center justify-center space-y-3">
-              <div class="w-14 h-14 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-600 text-xl">
+            <div class="text-center py-24 text-slate-400 flex flex-col items-center justify-center space-y-3">
+              <div class="w-14 h-14 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 text-xl shadow-inner">
                 <i class="fa-solid fa-feather-pointed"></i>
               </div>
-              <p class="font-medium text-slate-400">No research investigation launched yet.</p>
+              <p class="font-medium text-slate-600">No research investigation launched yet.</p>
               <p class="text-xs text-slate-500 max-w-sm">Enter a topic or technical query on the left. ARAA will autonomously gather evidence, verify sources, and generate an empirical report.</p>
             </div>
           </div>
@@ -522,13 +558,13 @@
         <!-- TAB 2: Evidence Sources Ledger -->
         <div id="tabEvidence" class="hidden flex-1 overflow-y-auto mt-4 pr-1">
           <div id="evidenceContainer" class="space-y-3">
-            <div class="text-center py-24 text-slate-500">No evidence items gathered yet.</div>
+            <div class="text-center py-24 text-slate-400">No evidence items gathered yet.</div>
           </div>
         </div>
 
         <!-- TAB 3: Raw JSON Inspector -->
         <div id="tabRaw" class="hidden flex-1 overflow-y-auto mt-4 pr-1">
-          <pre id="rawContainer" class="bg-slate-950 border border-slate-800/80 p-4 rounded-xl font-mono text-xs overflow-x-auto leading-relaxed" style="color: var(--accent-text);">{}</pre>
+          <pre id="rawContainer" class="bg-slate-900 border border-slate-800 p-4 rounded-xl font-mono text-xs text-sky-300 overflow-x-auto leading-relaxed shadow-inner">{}</pre>
         </div>
 
       </div>
@@ -537,11 +573,11 @@
   </main>
 
   <!-- Modern Sticky Bottom Footer -->
-  <footer class="border-t border-slate-900 bg-slate-950/90 py-3 px-6 text-center text-xs text-slate-500 font-mono flex flex-col sm:flex-row items-center justify-between gap-2">
+  <footer class="border-t bg-white py-3.5 px-6 text-center text-xs text-slate-500 font-mono flex flex-col sm:flex-row items-center justify-between gap-2 shadow-sm" style="border-color: var(--border-card);">
     <div>
       ARAA Autonomous Research & Analysis Agent • Zero Cost ($0.00)
     </div>
-    <div class="flex items-center gap-3 text-slate-400">
+    <div class="flex items-center gap-3 text-slate-500 font-medium">
       <span>Anti-Hallucination Verified</span>
       <span>•</span>
       <span>pgvector & Redis Ready</span>
@@ -555,16 +591,16 @@
     let eventSource = null;
     let currentRawReport = '';
 
-    // Theme Switcher Logic
+    // Light Theme Switcher Logic
     function changeTheme(themeName) {
       document.documentElement.setAttribute('data-theme', themeName);
-      localStorage.setItem('araa-theme', themeName);
+      localStorage.setItem('araa-light-theme', themeName);
       const sel = document.getElementById('themeSelector');
       if (sel) sel.value = themeName;
     }
 
-    // Initialize Theme
-    const savedTheme = localStorage.getItem('araa-theme') || 'sapphire';
+    // Initialize Theme (Default to Clean Snow Light)
+    const savedTheme = localStorage.getItem('araa-light-theme') || 'snow';
     changeTheme(savedTheme);
 
     // Keyboard Shortcut (Ctrl+Enter / Cmd+Enter to launch)
@@ -582,7 +618,7 @@
 
     function clearTerminal() {
       document.getElementById('terminalFeed').innerHTML = `
-        <div class="text-slate-500 text-center py-8 text-xs">Terminal cleared.</div>
+        <div class="text-slate-400 text-center py-8 text-xs">Terminal cleared.</div>
       `;
     }
 
@@ -591,14 +627,14 @@
       tabs.forEach(t => {
         document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.add('hidden');
         const btn = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
-        btn.className = 'text-xs font-semibold px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition flex items-center gap-1.5';
+        btn.className = 'text-xs font-semibold px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center gap-1.5';
         btn.style.background = 'transparent';
       });
 
       const activeTab = document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
       activeTab.classList.remove('hidden');
       const activeBtn = document.getElementById(`tabBtn${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
-      activeBtn.className = 'text-xs font-semibold px-3 py-1.5 rounded-lg text-white transition flex items-center gap-1.5';
+      activeBtn.className = 'text-xs font-semibold px-3 py-1.5 rounded-lg text-white transition flex items-center gap-1.5 shadow-sm';
       activeBtn.style.background = 'var(--accent-primary)';
     }
 
@@ -606,29 +642,29 @@
       const feed = document.getElementById('terminalFeed');
       
       // If placeholder exists, remove it
-      if (feed.querySelector('.text-slate-500.text-center')) {
+      if (feed.querySelector('.text-slate-400.text-center')) {
         feed.innerHTML = '';
       }
 
       const item = document.createElement('div');
       
-      let borderCol = 'border-cyan-500/60 bg-cyan-950/20';
-      let icon = 'fa-arrow-right text-cyan-400';
-      if (type === 'tool') { borderCol = 'border-sky-500/60 bg-sky-950/20'; icon = 'fa-screwdriver-wrench text-sky-400'; }
-      if (type === 'success') { borderCol = 'border-emerald-500/60 bg-emerald-950/20'; icon = 'fa-check text-emerald-400'; }
-      if (type === 'warn') { borderCol = 'border-amber-500/60 bg-amber-950/20'; icon = 'fa-triangle-exclamation text-amber-400'; }
-      if (type === 'error') { borderCol = 'border-rose-500/60 bg-rose-950/20'; icon = 'fa-xmark text-rose-400'; }
+      let borderCol = 'border-sky-500 bg-sky-50/70 text-sky-950';
+      let icon = 'fa-arrow-right text-sky-600';
+      if (type === 'tool') { borderCol = 'border-blue-500 bg-blue-50/70 text-blue-950'; icon = 'fa-screwdriver-wrench text-blue-600'; }
+      if (type === 'success') { borderCol = 'border-emerald-500 bg-emerald-50/70 text-emerald-950'; icon = 'fa-check text-emerald-600'; }
+      if (type === 'warn') { borderCol = 'border-amber-500 bg-amber-50/70 text-amber-950'; icon = 'fa-triangle-exclamation text-amber-600'; }
+      if (type === 'error') { borderCol = 'border-rose-500 bg-rose-50/70 text-rose-950'; icon = 'fa-xmark text-rose-600'; }
 
-      item.className = `p-2.5 rounded-xl border-l-2 ${borderCol} flex flex-col space-y-1 transition`;
+      item.className = `p-2.5 rounded-xl border-l-3 ${borderCol} flex flex-col space-y-1 transition shadow-sm border`;
       item.innerHTML = `
-        <div class="flex items-center justify-between text-slate-200">
-          <span class="font-semibold flex items-center gap-2 text-xs">
+        <div class="flex items-center justify-between font-semibold text-xs">
+          <span class="flex items-center gap-2">
             <i class="fa-solid ${icon}"></i>
             <span>${title}</span>
           </span>
-          <span class="text-[10px] text-slate-500">${new Date().toLocaleTimeString()}</span>
+          <span class="text-[10px] text-slate-500 font-normal">${new Date().toLocaleTimeString()}</span>
         </div>
-        ${details ? `<div class="text-slate-400 text-[11px] whitespace-pre-wrap pl-5 font-mono">${details}</div>` : ''}
+        ${details ? `<div class="text-slate-600 text-[11px] whitespace-pre-wrap pl-5 font-mono">${details}</div>` : ''}
       `;
       feed.appendChild(item);
       feed.scrollTop = feed.scrollHeight;
@@ -651,18 +687,20 @@
       addLog('Initialization', `Directive: "${task}"\nAuthorized Role: ${role}`);
 
       document.getElementById('runBadge').innerText = 'RUNNING';
-      document.getElementById('runBadge').className = 'text-[11px] font-mono px-2 py-0.5 rounded-md text-cyan-300 border border-cyan-700/60 animate-pulse';
+      document.getElementById('runBadge').className = 'text-[11px] font-mono px-2 py-0.5 rounded-md border animate-pulse font-semibold';
       document.getElementById('runBadge').style.background = 'var(--accent-subtle)';
+      document.getElementById('runBadge').style.borderColor = 'var(--accent-border)';
+      document.getElementById('runBadge').style.color = 'var(--accent-text)';
 
       // Switch to report tab and show loading
       switchTab('report');
       document.getElementById('reportContainer').innerHTML = `
-        <div class="text-center py-24 text-slate-400 flex flex-col items-center justify-center space-y-3">
-          <div class="w-12 h-12 rounded-xl border flex items-center justify-center text-lg" 
-               style="background: var(--accent-subtle); border-color: var(--accent-border); color: var(--accent-text);">
+        <div class="text-center py-24 text-slate-500 flex flex-col items-center justify-center space-y-3">
+          <div class="w-12 h-12 rounded-xl border flex items-center justify-center text-lg shadow-sm" 
+               style="background: var(--accent-subtle); border-color: var(--accent-border); color: var(--accent-primary);">
             <i class="fa-solid fa-brain animate-pulse"></i>
           </div>
-          <p class="font-medium">Autonomous investigation in progress...</p>
+          <p class="font-medium text-slate-700">Autonomous investigation in progress...</p>
           <p class="text-xs text-slate-500 max-w-sm">Gathering cross-verified evidence items and executing policy-bounded tool calls.</p>
         </div>
       `;
@@ -788,8 +826,8 @@
       const isSuccess = data.status === 'completed';
       document.getElementById('runBadge').innerText = data.status.toUpperCase();
       document.getElementById('runBadge').className = isSuccess 
-        ? 'text-[11px] font-mono px-2 py-0.5 rounded-md bg-emerald-950 text-emerald-300 border border-emerald-700/60'
-        : 'text-[11px] font-mono px-2 py-0.5 rounded-md bg-rose-950 text-rose-300 border border-rose-700/60';
+        ? 'text-[11px] font-mono px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-300 font-semibold'
+        : 'text-[11px] font-mono px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-300 font-semibold';
 
       if (data.error) {
         addLog('Run Failed', data.error, 'error');
@@ -810,19 +848,19 @@
         document.getElementById('reportContainer').innerHTML = marked.parse(content);
       } else if (data.error) {
         document.getElementById('reportContainer').innerHTML = `
-          <div class="p-5 rounded-2xl bg-rose-950/40 border border-rose-800 text-rose-200">
+          <div class="p-5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 shadow-sm">
             <h3 class="font-bold text-sm mb-1.5 flex items-center gap-2">
-              <i class="fa-solid fa-triangle-exclamation text-rose-400"></i>
+              <i class="fa-solid fa-triangle-exclamation text-rose-600"></i>
               <span>Investigation Interrupted</span>
             </h3>
-            <p class="font-mono text-xs text-rose-300">${data.error}</p>
+            <p class="font-mono text-xs text-rose-800">${data.error}</p>
           </div>
         `;
       } else {
         document.getElementById('reportContainer').innerHTML = `
-          <div class="text-center py-20 text-slate-400">
-            <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3" style="color: var(--accent-text);"></i>
-            <p>Synthesizing verified report...</p>
+          <div class="text-center py-20 text-slate-500">
+            <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3" style="color: var(--accent-primary);"></i>
+            <p class="font-medium">Synthesizing verified report...</p>
           </div>
         `;
       }
@@ -843,22 +881,22 @@
       if (data.evidence && data.evidence.length > 0) {
         data.evidence.forEach((ev, idx) => {
           const card = document.createElement('div');
-          card.className = 'p-4 rounded-xl bg-slate-900/90 border border-slate-800/80 text-xs font-mono space-y-2';
+          card.className = 'p-4 rounded-xl bg-white border border-slate-200 text-xs font-mono space-y-2 shadow-sm';
           card.innerHTML = `
-            <div class="flex items-center justify-between font-semibold" style="color: var(--accent-text);">
+            <div class="flex items-center justify-between font-semibold" style="color: var(--accent-primary);">
               <span class="flex items-center gap-1.5">
-                <i class="fa-solid fa-quote-left text-slate-500"></i>
+                <i class="fa-solid fa-quote-left text-slate-400"></i>
                 <span>[${idx + 1}] ${ev.tool_name}</span>
               </span>
-              <span class="px-2 py-0.5 rounded-full text-[10px] ${ev.trust_level === 'trusted' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-amber-950 text-amber-400 border border-amber-800'}">${ev.trust_level}</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] ${ev.trust_level === 'trusted' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">${ev.trust_level}</span>
             </div>
-            <p class="text-slate-300 font-sans text-xs leading-relaxed">"${ev.excerpt}"</p>
-            ${ev.source_url ? `<a href="${ev.source_url}" target="_blank" class="hover:underline truncate block text-[11px]" style="color: var(--accent-text);"><i class="fa-solid fa-link text-[10px] mr-1"></i>${ev.source_url}</a>` : ''}
+            <p class="text-slate-700 font-sans text-xs leading-relaxed">"${ev.excerpt}"</p>
+            ${ev.source_url ? `<a href="${ev.source_url}" target="_blank" class="hover:underline truncate block text-[11px]" style="color: var(--accent-primary);"><i class="fa-solid fa-link text-[10px] mr-1"></i>${ev.source_url}</a>` : ''}
           `;
           evContainer.appendChild(card);
         });
       } else {
-        evContainer.innerHTML = '<div class="text-center py-20 text-slate-500">No empirical evidence gathered.</div>';
+        evContainer.innerHTML = '<div class="text-center py-20 text-slate-400">No empirical evidence gathered.</div>';
       }
 
       // 4. Render Raw JSON
@@ -892,7 +930,7 @@
               renderRunData(latest);
               document.getElementById('taskInput').value = latest.task || '';
               document.getElementById('runBadge').innerText = 'COMPLETED';
-              document.getElementById('runBadge').className = 'text-[11px] font-mono px-2 py-0.5 rounded-md bg-emerald-950 text-emerald-300 border border-emerald-700/60';
+              document.getElementById('runBadge').className = 'text-[11px] font-mono px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-300 font-semibold';
               addLog('Session Restored', `Loaded latest completed run: "${latest.task}"`, 'success');
               sel.value = latest.run_id;
             }
@@ -913,8 +951,8 @@
         if (data.task) document.getElementById('taskInput').value = data.task;
         document.getElementById('runBadge').innerText = data.status.toUpperCase();
         document.getElementById('runBadge').className = data.status === 'completed' 
-          ? 'text-[11px] font-mono px-2 py-0.5 rounded-md bg-emerald-950 text-emerald-300 border border-emerald-700/60'
-          : 'text-[11px] font-mono px-2 py-0.5 rounded-md bg-rose-950 text-rose-300 border border-rose-700/60';
+          ? 'text-[11px] font-mono px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-300 font-semibold'
+          : 'text-[11px] font-mono px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-300 font-semibold';
       } catch (e) {
         console.error("Failed to load run:", e);
       }
