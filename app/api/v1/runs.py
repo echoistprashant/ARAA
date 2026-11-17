@@ -70,13 +70,18 @@ async def _execute_agent_run(run_id: str, task: str, user_role: str) -> None:
         final_state = await orchestrator.run(state)
 
         # Post-run synthesis and verification
-        synthesizer = Synthesizer()
+        synthesizer = Synthesizer(llm=llm)
         report = await synthesizer.synthesize(task, final_state.evidence)
 
         verifier = Verifier()
         audit = verifier.verify(report, final_state.evidence)
 
-        markdown = ReportExporter.to_markdown(report, audit, final_state.evidence)
+        markdown = ReportExporter.to_markdown(
+            report,
+            audit,
+            final_state.evidence,
+            raw_final_report=final_state.final_report,
+        )
 
         active_runs[run_id].update({
             "status": final_state.status.value,

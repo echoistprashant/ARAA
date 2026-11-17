@@ -68,9 +68,9 @@ class Verifier:
             # 2. Check source trust levels
             untrusted_evs = [ev for ev in valid_evs if ev.trust_level == "untrusted"]
             if untrusted_evs:
-                warnings.append(
-                    f"Claim '{claim.text[:60]}...' is supported by {len(untrusted_evs)} untrusted source(s)."
-                )
+                warning_msg = "Claims incorporate findings from external untrusted source(s)."
+                if warning_msg not in warnings:
+                    warnings.append(warning_msg)
 
             # 3. Check token overlap / grounding heuristic
             claim_tokens = set(claim.text.lower().split())
