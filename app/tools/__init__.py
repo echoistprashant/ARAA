@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from app.tools.evidence_search import EvidenceSearchTool
     from app.tools.fetch_url import FetchUrlTool
     from app.tools.rag_search import RAGSearchTool
+    from app.tools.sandbox import PythonSandboxTool
     from app.tools.search_stub import SearchStubTool
     from app.tools.web_search import WebSearchTool
 
@@ -17,6 +18,7 @@ def get_default_registry() -> ToolRegistry:
     from app.tools.evidence_search import EvidenceSearchTool
     from app.tools.fetch_url import FetchUrlTool
     from app.tools.rag_search import RAGSearchTool
+    from app.tools.sandbox import PythonSandboxTool
     from app.tools.search_stub import SearchStubTool
     from app.tools.web_search import WebSearchTool
 
@@ -27,6 +29,7 @@ def get_default_registry() -> ToolRegistry:
     registry.register(FetchUrlTool())
     registry.register(RAGSearchTool())
     registry.register(EvidenceSearchTool())
+    registry.register(PythonSandboxTool())
     return registry
 
 

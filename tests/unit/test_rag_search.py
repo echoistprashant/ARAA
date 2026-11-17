@@ -45,4 +45,5 @@ def test_default_registry_factory():
     assert "fetch_url" in tools
     assert "rag_search" in tools
     assert "search_evidence" in tools
-    assert len(tools) == 6
+    assert "python_sandbox" in tools
+    assert len(tools) == 7
