@@ -48,12 +48,19 @@ class GeminiProvider:
                 if msg.content:
                     parts.append({"text": msg.content})
                 for tc in msg.tool_calls:
-                    parts.append({
-                        "functionCall": {
+                    if tc.raw_part:
+                        parts.append(tc.raw_part)
+                    else:
+                        fc_dict: dict[str, Any] = {
                             "name": tc.name,
                             "args": tc.arguments,
                         }
-                    })
+                        if tc.id:
+                            fc_dict["id"] = tc.id
+                        part_dict: dict[str, Any] = {"functionCall": fc_dict}
+                        if tc.thought_signature:
+                            part_dict["thoughtSignature"] = tc.thought_signature
+                        parts.append(part_dict)
                 contents.append({"role": "model", "parts": parts})
             elif msg.role == Role.TOOL or msg.role == "tool":
                 # Function response returned to model
@@ -147,11 +154,14 @@ class GeminiProvider:
                 text_content += part["text"]
             elif "functionCall" in part:
                 fc = part["functionCall"]
+                ts = part.get("thoughtSignature") or part.get("thought_signature") or fc.get("thought_signature")
                 tool_calls.append(
                     ToolCall(
-                        id=f"call_{idx}_{int(time.time())}",
+                        id=fc.get("id") or f"call_{idx}_{int(time.time())}",
                         name=fc.get("name", ""),
                         arguments=fc.get("args", {}),
+                        thought_signature=ts,
+                        raw_part=part,
                     )
                 )
 

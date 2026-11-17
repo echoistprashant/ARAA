@@ -17,6 +17,8 @@ class ToolCall:
     id: str
     name: str
     arguments: dict[str, Any]
+    thought_signature: str | None = None
+    raw_part: dict[str, Any] | None = None
 
 
 @dataclass
