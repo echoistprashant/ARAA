@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARAA — Autonomous Research & Analysis Agent</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50: '#eef2ff', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', 900: '#1e1b4b' },
+            cyber: { bg: '#0b0f19', card: '#111827', border: '#1f2937', accent: '#10b981' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #0b0f19; color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .glass-panel { background: rgba(17, 24, 39, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .terminal-scroll::-webkit-scrollbar { width: 6px; }
+    .terminal-scroll::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+    .prose-dark h1 { font-size: 1.5rem; font-weight: 700; color: #818cf8; margin-top: 1rem; margin-bottom: 0.5rem; }
+    .prose-dark h2 { font-size: 1.25rem; font-weight: 600; color: #60a5fa; margin-top: 1rem; margin-bottom: 0.5rem; }
+    .prose-dark p { margin-bottom: 0.75rem; line-height: 1.6; color: #d1d5db; }
+    .prose-dark ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 0.75rem; color: #d1d5db; }
+    .prose-dark ol { list-style-type: decimal; margin-left: 1.5rem; margin-bottom: 0.75rem; color: #d1d5db; }
+    .prose-dark table { width: 100%; border-collapse: collapse; margin-top: 1rem; margin-bottom: 1rem; font-size: 0.875rem; }
+    .prose-dark th, .prose-dark td { border: 1px solid #374151; padding: 0.5rem 0.75rem; text-align: left; }
+    .prose-dark th { background: #1f2937; color: #9ca3af; }
+    .prose-dark blockquote { border-left: 4px solid #6366f1; padding-left: 1rem; color: #a5b4fc; margin-bottom: 1rem; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Top Navigation Bar -->
+  <header class="border-b border-gray-800 bg-gray-950/80 backdrop-blur sticky top-0 z-50 px-6 py-3.5 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <div class="h-9 w-9 rounded-lg bg-gradient-to-tr from-indigo-600 to-emerald-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+        <i class="fa-solid fa-atom text-white text-lg animate-pulse"></i>
+      </div>
+      <div>
+        <h1 class="font-bold text-base tracking-wide text-white flex items-center gap-2">
+          ARAA <span class="text-xs px-2 py-0.5 rounded bg-indigo-950 text-indigo-400 border border-indigo-800 font-mono">v1.0 Production</span>
+        </h1>
+        <p class="text-xs text-gray-400">Autonomous Research & Analysis Agent</p>
+      </div>
+    </div>
+
+    <!-- System Vitals Status Pills -->
+    <div class="hidden md:flex items-center space-x-3 text-xs font-mono">
+      <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-800/60 text-emerald-400">
+        <span class="h-2 w-2 rounded-full bg-emerald-500 animate-ping"></span>
+        <span>Docker: Postgres + Redis</span>
+      </div>
+      <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-indigo-950/60 border border-indigo-800/60 text-indigo-400">
+        <i class="fa-solid fa-brain"></i>
+        <span>Gemini 3.5 Flash Lite</span>
+      </div>
+      <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-purple-950/60 border border-purple-800/60 text-purple-300">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span>Anti-SSRF & TOCTOU</span>
+      </div>
+      <div class="px-2.5 py-1 rounded-full bg-amber-950/60 border border-amber-800/60 text-amber-300 font-bold">
+        $0.00 / Zero Cost
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- Left Column: Input Controls & Execution Feed (5 Cols) -->
+    <section class="lg:col-span-5 flex flex-col space-y-5">
+      
+      <!-- Input Card -->
+      <div class="glass-panel rounded-xl p-5 shadow-xl">
+        <div class="flex items-center justify-between mb-3">
+          <label class="text-xs font-semibold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+            <i class="fa-solid fa-compass text-indigo-400"></i> Research Directive
+          </label>
+          <div class="flex items-center space-x-2">
+            <span class="text-xs text-gray-400">Role:</span>
+            <select id="userRole" class="bg-gray-900 border border-gray-700 text-xs rounded px-2 py-1 text-gray-200 focus:outline-none focus:border-indigo-500">
+              <option value="researcher" selected>Researcher</option>
+              <option value="operator">Operator</option>
+              <option value="admin">Admin</option>
+              <option value="viewer">Viewer</option>
+            </select>
+          </div>
+        </div>
+
+        <textarea id="taskInput" rows="3" class="w-full bg-gray-900/90 border border-gray-700 rounded-lg p-3 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-indigo-500 transition resize-none" placeholder="E.g., What company manufactures the Twinscan EXE:5000 and what is its price?"></textarea>
+
+        <!-- Quick Pill Suggestions -->
+        <div class="mt-3 flex flex-wrap gap-1.5">
+          <button onclick="setQuery('What company manufactures Twinscan EXE:5000 and who is its primary customer?')" class="text-xs px-2 py-1 rounded bg-gray-800/80 hover:bg-gray-700 text-gray-300 transition">🔍 ASML Lithography</button>
+          <button onclick="setQuery('Calculate the compound interest on $50,000 at 7.5% annual rate for 5 years.')" class="text-xs px-2 py-1 rounded bg-gray-800/80 hover:bg-gray-700 text-gray-300 transition">🧮 Compound Math</button>
+          <button onclick="setQuery('Write a Python script to compute Fibonacci numbers up to 100.')" class="text-xs px-2 py-1 rounded bg-gray-800/80 hover:bg-gray-700 text-gray-300 transition">🐍 Python Sandbox</button>
+        </div>
+
+        <button id="startBtn" onclick="startResearch()" class="mt-4 w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-medium py-2.5 px-4 rounded-lg shadow-lg shadow-indigo-600/30 flex items-center justify-center space-x-2 transition cursor-pointer">
+          <i class="fa-solid fa-play text-xs"></i>
+          <span>Launch Autonomous Investigation</span>
+        </button>
+      </div>
+
+      <!-- Live Execution Log Terminal -->
+      <div class="glass-panel rounded-xl p-4 flex-1 flex flex-col shadow-xl min-h-[360px]">
+        <div class="flex items-center justify-between pb-3 border-b border-gray-800">
+          <div class="flex items-center space-x-2">
+            <span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+            <span class="text-xs font-mono font-semibold uppercase tracking-wider text-gray-300">Live Agent Trajectory</span>
+          </div>
+          <span id="runBadge" class="text-xs font-mono px-2 py-0.5 rounded bg-gray-800 text-gray-400">IDLE</span>
+        </div>
+
+        <!-- Terminal Output Window -->
+        <div id="terminalFeed" class="terminal-scroll flex-1 overflow-y-auto mt-3 space-y-2 font-mono text-xs pr-1">
+          <div class="text-gray-500 italic p-3 text-center">Ready. Launch an investigation to observe real-time tool calls, plan sub-goals, and verification events.</div>
+        </div>
+
+        <!-- HITL Approval Banner (Dynamic) -->
+        <div id="hitlBanner" class="hidden mt-3 p-3 rounded-lg bg-amber-950/80 border border-amber-600 text-amber-200">
+          <div class="flex items-start justify-between">
+            <div>
+              <p class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation text-amber-400"></i> Human Authorization Required</p>
+              <p id="hitlDetails" class="text-xs mt-1 text-amber-300"></p>
+            </div>
+          </div>
+          <div class="mt-3 flex space-x-2">
+            <button onclick="resolveApproval('approve')" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1 px-3 rounded text-xs transition">Authorize Execution</button>
+            <button onclick="resolveApproval('reject')" class="flex-1 bg-red-700 hover:bg-red-600 text-white font-bold py-1 px-3 rounded text-xs transition">Deny Action</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: Research Report & Audit Inspector (7 Cols) -->
+    <section class="lg:col-span-7 flex flex-col space-y-5">
+      <div class="glass-panel rounded-xl p-5 flex-1 flex flex-col shadow-xl min-h-[500px]">
+        
+        <!-- Tab Bar -->
+        <div class="flex items-center justify-between border-b border-gray-800 pb-3">
+          <div class="flex space-x-2">
+            <button onclick="switchTab('report')" id="tabBtnReport" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white transition">
+              <i class="fa-solid fa-file-lines mr-1.5"></i> Verified Report
+            </button>
+            <button onclick="switchTab('evidence')" id="tabBtnEvidence" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-gray-800 text-gray-400 hover:text-gray-200 transition">
+              <i class="fa-solid fa-database mr-1.5"></i> Evidence Sources
+            </button>
+            <button onclick="switchTab('raw')" id="tabBtnRaw" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-gray-800 text-gray-400 hover:text-gray-200 transition">
+              <i class="fa-solid fa-code mr-1.5"></i> Audit JSON
+            </button>
+          </div>
+
+          <!-- Grounding Badge -->
+          <div id="groundingBadge" class="hidden text-xs font-mono px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-700">
+            Audit: VERIFIED (100% Grounded)
+          </div>
+        </div>
+
+        <!-- Tab 1: Rendered Markdown Report -->
+        <div id="tabReport" class="flex-1 overflow-y-auto mt-4 pr-1 terminal-scroll">
+          <div id="reportContainer" class="prose-dark text-sm">
+            <div class="text-center py-20 text-gray-500">
+              <i class="fa-solid fa-newspaper text-4xl mb-3 text-gray-700"></i>
+              <p>No research report generated yet.</p>
+              <p class="text-xs mt-1 text-gray-600">Submit a query to generate an audited, multi-source empirical report.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Evidence Sources Table -->
+        <div id="tabEvidence" class="hidden flex-1 overflow-y-auto mt-4 pr-1 terminal-scroll">
+          <div id="evidenceContainer" class="space-y-3">
+            <div class="text-center py-20 text-gray-500">No evidence items gathered yet.</div>
+          </div>
+        </div>
+
+        <!-- Tab 3: Raw JSON Inspector -->
+        <div id="tabRaw" class="hidden flex-1 overflow-y-auto mt-4 pr-1 terminal-scroll">
+          <pre id="rawContainer" class="bg-gray-950 p-4 rounded-lg font-mono text-xs text-indigo-300 overflow-x-auto">{}</pre>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="border-t border-gray-900 px-6 py-3 text-center text-xs text-gray-600 font-mono">
+    ARAA Autonomous Research & Analysis Agent • Zero-Cost Architecture ($0.00) • Anti-Hallucination & Anti-TOCTOU Grounded
+  </footer>
+
+  <script>
+    let currentRunId = null;
+    let activeApprovalId = null;
+    let eventSource = null;
+
+    function setQuery(text) {
+      document.getElementById('taskInput').value = text;
+    }
+
+    function switchTab(tab) {
+      const tabs = ['report', 'evidence', 'raw'];
+      tabs.forEach(t => {
+        document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.add('hidden');
+        document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`).className = 'text-xs font-semibold px-3 py-1.5 rounded-lg bg-gray-800 text-gray-400 hover:text-gray-200 transition';
+      });
+
+      document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.remove('hidden');
+      document.getElementById(`tabBtn${tab.charAt(0).toUpperCase() + tab.slice(1)}`).className = 'text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white transition';
+    }
+
+    function addLog(title, details, type = 'info') {
+      const feed = document.getElementById('terminalFeed');
+      const item = document.createElement('div');
+      
+      let borderCol = 'border-indigo-800';
+      let icon = 'fa-arrow-right text-indigo-400';
+      if (type === 'tool') { borderCol = 'border-cyan-800'; icon = 'fa-wrench text-cyan-400'; }
+      if (type === 'success') { borderCol = 'border-emerald-800'; icon = 'fa-check text-emerald-400'; }
+      if (type === 'warn') { borderCol = 'border-amber-800'; icon = 'fa-triangle-exclamation text-amber-400'; }
+      if (type === 'error') { borderCol = 'border-rose-800'; icon = 'fa-xmark text-rose-400'; }
+
+      item.className = `p-2.5 rounded bg-gray-900/90 border-l-2 ${borderCol} flex flex-col space-y-1 shadow`;
+      item.innerHTML = `
+        <div class="flex items-center justify-between text-gray-300">
+          <span class="font-bold flex items-center gap-1.5"><i class="fa-solid ${icon}"></i> ${title}</span>
+          <span class="text-[10px] text-gray-500">${new Date().toLocaleTimeString()}</span>
+        </div>
+        ${details ? `<div class="text-gray-400 text-[11px] whitespace-pre-wrap mt-0.5">${details}</div>` : ''}
+      `;
+      feed.appendChild(item);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    async function startResearch() {
+      const task = document.getElementById('taskInput').value.trim();
+      const role = document.getElementById('userRole').value;
+      if (!task) return alert('Please enter a research query.');
+
+      const startBtn = document.getElementById('startBtn');
+      startBtn.disabled = true;
+      startBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i> <span>Synthesizing Strategy...</span>';
+
+      const feed = document.getElementById('terminalFeed');
+      feed.innerHTML = '';
+      addLog('Initialization', `Task: "${task}" (Role: ${role})`);
+
+      document.getElementById('runBadge').innerText = 'RUNNING';
+      document.getElementById('runBadge').className = 'text-xs font-mono px-2 py-0.5 rounded bg-indigo-950 text-indigo-400 animate-pulse';
+
+      try {
+        const res = await fetch('/api/v1/runs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ task, user_role: role })
+        });
+        const data = await res.json();
+        currentRunId = data.run_id;
+        addLog('Run Dispatched', `Allocated run ID: ${currentRunId}`);
+
+        // Connect SSE stream
+        connectSSE(currentRunId);
+
+      } catch (err) {
+        addLog('Dispatch Failed', err.message, 'error');
+        startBtn.disabled = false;
+        startBtn.innerHTML = '<i class="fa-solid fa-play text-xs"></i> <span>Launch Autonomous Investigation</span>';
+      }
+    }
+
+    function connectSSE(runId) {
+      if (eventSource) eventSource.close();
+      eventSource = new EventSource(`/api/v1/events/runs/${runId}/stream`);
+
+      eventSource.addEventListener('run_started', (e) => {
+        const data = JSON.parse(e.data);
+        addLog('Autonomous Loop Started', `Goal: ${data.task}`);
+      });
+
+      eventSource.addEventListener('step_started', (e) => {
+        const data = JSON.parse(e.data);
+        addLog(`Step ${data.step} Started`, `Proposed Tools: ${data.tool_calls.join(', ')}`, 'tool');
+      });
+
+      eventSource.addEventListener('tool_executed', (e) => {
+        const data = JSON.parse(e.data);
+        addLog(`Tool Executed: ${data.tool}`, `Status: ${data.status}`, 'tool');
+      });
+
+      eventSource.addEventListener('approval_requested', (e) => {
+        const data = JSON.parse(e.data);
+        activeApprovalId = data.approval_id;
+        document.getElementById('hitlDetails').innerText = `Action '${data.tool}' is gated by Least Privilege security. Authorize to proceed.`;
+        document.getElementById('hitlBanner').classList.remove('hidden');
+        addLog('Awaiting Approval', `Tool '${data.tool}' paused for human review [ID: ${data.approval_id}]`, 'warn');
+      });
+
+      eventSource.addEventListener('run_completed', async (e) => {
+        const data = JSON.parse(e.data);
+        addLog('Execution Finished', `Total turns: ${data.steps} | Cost: $${data.cost_usd}`, 'success');
+        finishRun();
+      });
+
+      eventSource.addEventListener('run_finished', (e) => {
+        finishRun();
+      });
+
+      eventSource.onerror = (err) => {
+        // SSE disconnected or complete
+        finishRun();
+      };
+    }
+
+    async function resolveApproval(decision) {
+      if (!activeApprovalId) return;
+      try {
+        await fetch(`/api/v1/approvals/${activeApprovalId}/resolve`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ decision, resolved_by: 'web_operator' })
+        });
+        document.getElementById('hitlBanner').classList.add('hidden');
+        addLog('Approval Resolved', `Decision '${decision}' recorded with cryptographic integrity.`, 'success');
+      } catch (err) {
+        alert('Failed to resolve approval: ' + err.message);
+      }
+    }
+
+    async function finishRun() {
+      if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+      }
+
+      document.getElementById('runBadge').innerText = 'COMPLETED';
+      document.getElementById('runBadge').className = 'text-xs font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400';
+
+      const startBtn = document.getElementById('startBtn');
+      startBtn.disabled = false;
+      startBtn.innerHTML = '<i class="fa-solid fa-play text-xs"></i> <span>Launch Autonomous Investigation</span>';
+
+      // Fetch final report and evidence
+      if (currentRunId) {
+        const res = await fetch(`/api/v1/runs/${currentRunId}`);
+        const data = await res.json();
+
+        // Render Markdown
+        if (data.markdown_report) {
+          document.getElementById('reportContainer').innerHTML = marked.parse(data.markdown_report);
+        } else if (data.final_report) {
+          document.getElementById('reportContainer').innerHTML = marked.parse(data.final_report);
+        }
+
+        // Render Grounding Score Badge
+        if (data.grounding_score !== null) {
+          const badge = document.getElementById('groundingBadge');
+          badge.classList.remove('hidden');
+          badge.innerText = `Audit: ${data.audit_passed ? 'VERIFIED' : 'UNVERIFIED'} (${Math.round(data.grounding_score * 100)}% Grounded)`;
+        }
+
+        // Render Evidence Tab
+        const evContainer = document.getElementById('evidenceContainer');
+        evContainer.innerHTML = '';
+        if (data.evidence && data.evidence.length > 0) {
+          data.evidence.forEach((ev, idx) => {
+            const card = document.createElement('div');
+            card.className = 'p-3 rounded-lg bg-gray-900 border border-gray-800 text-xs font-mono';
+            card.innerHTML = `
+              <div class="flex items-center justify-between text-indigo-400 font-bold mb-1">
+                <span>[${idx + 1}] ${ev.tool_name}</span>
+                <span class="px-1.5 py-0.5 rounded text-[10px] ${ev.trust_level === 'trusted' ? 'bg-emerald-950 text-emerald-400' : 'bg-amber-950 text-amber-400'}">${ev.trust_level}</span>
+              </div>
+              <p class="text-gray-300 font-sans text-xs mb-2">"${ev.excerpt}"</p>
+              ${ev.source_url ? `<a href="${ev.source_url}" target="_blank" class="text-indigo-400 underline truncate block">${ev.source_url}</a>` : ''}
+            `;
+            evContainer.appendChild(card);
+          });
+        } else {
+          evContainer.innerHTML = '<div class="text-center py-20 text-gray-500">No empirical evidence gathered.</div>';
+        }
+
+        // Render Raw JSON
+        document.getElementById('rawContainer').innerText = JSON.stringify(data, null, 2);
+      }
+    }
+  </script>
+</body>
+</html>

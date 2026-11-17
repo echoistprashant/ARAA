@@ -1,13 +1,16 @@
 import uuid
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, HTMLResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api.v1.approvals import router as approvals_router
 from app.api.v1.events import router as events_router
 from app.api.v1.health import router as health_router
+from app.api.v1.runs import router as runs_router
 from app.core.config import settings
 from app.core.errors import ARAAError, araa_exception_handler
 from app.core.logging import get_logger, setup_logging
@@ -62,6 +65,15 @@ def create_app() -> FastAPI:
     app.include_router(health_router, prefix="/api/v1")
     app.include_router(approvals_router, prefix="/api/v1")
     app.include_router(events_router, prefix="/api/v1")
+    app.include_router(runs_router, prefix="/api/v1")
+
+    # Interactive Frontend
+    @app.get("/", include_in_schema=False)
+    async def serve_frontend():
+        static_file = Path(__file__).resolve().parent / "static" / "index.html"
+        if static_file.exists():
+            return FileResponse(static_file)
+        return HTMLResponse("<h1>ARAA API is running.</h1>")
 
     return app
 
