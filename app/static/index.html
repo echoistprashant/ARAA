@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" class="dark" data-theme="sapphire">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -23,22 +23,6 @@
           fontFamily: {
             sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
             mono: ['JetBrains Mono', 'monospace'],
-          },
-          colors: {
-            brand: {
-              50: '#eef2ff',
-              100: '#e0e7ff',
-              500: '#6366f1',
-              600: '#4f46e5',
-              700: '#4338ca',
-              900: '#1e1b4b',
-              950: '#0c0a24',
-            },
-            slate: {
-              850: '#131b2e',
-              900: '#0f172a',
-              950: '#080d1a',
-            }
           }
         }
       }
@@ -46,6 +30,76 @@
   </script>
   
   <style>
+    /* THEME DEFINITIONS VIA CSS CUSTOM VARIABLES */
+    :root, [data-theme="sapphire"] {
+      --bg-body: #040711;
+      --bg-card: rgba(10, 16, 31, 0.85);
+      --border-card: rgba(255, 255, 255, 0.08);
+      --border-card-hover: rgba(56, 189, 248, 0.4);
+      --accent-primary: #0284c7;
+      --accent-gradient: linear-gradient(135deg, #0284c7, #2563eb);
+      --accent-glow: rgba(2, 132, 199, 0.2);
+      --accent-text: #38bdf8;
+      --accent-subtle: rgba(14, 165, 233, 0.12);
+      --accent-border: rgba(56, 189, 248, 0.35);
+      --ambient-1: rgba(2, 132, 199, 0.12);
+      --ambient-2: rgba(37, 99, 235, 0.08);
+      --highlight: #38bdf8;
+    }
+
+    [data-theme="emerald"] {
+      --bg-body: #020906;
+      --bg-card: rgba(5, 22, 15, 0.85);
+      --border-card: rgba(255, 255, 255, 0.08);
+      --border-card-hover: rgba(52, 211, 153, 0.4);
+      --accent-primary: #059669;
+      --accent-gradient: linear-gradient(135deg, #059669, #10b981);
+      --accent-glow: rgba(16, 185, 129, 0.2);
+      --accent-text: #34d399;
+      --accent-subtle: rgba(16, 185, 129, 0.12);
+      --accent-border: rgba(52, 211, 153, 0.35);
+      --ambient-1: rgba(16, 185, 129, 0.12);
+      --ambient-2: rgba(5, 150, 105, 0.08);
+      --highlight: #34d399;
+    }
+
+    [data-theme="amber"] {
+      --bg-body: #090806;
+      --bg-card: rgba(24, 20, 14, 0.85);
+      --border-card: rgba(255, 255, 255, 0.08);
+      --border-card-hover: rgba(251, 191, 36, 0.4);
+      --accent-primary: #d97706;
+      --accent-gradient: linear-gradient(135deg, #d97706, #f59e0b);
+      --accent-glow: rgba(245, 158, 11, 0.2);
+      --accent-text: #fbbf24;
+      --accent-subtle: rgba(245, 158, 11, 0.12);
+      --accent-border: rgba(251, 191, 36, 0.35);
+      --ambient-1: rgba(245, 158, 11, 0.12);
+      --ambient-2: rgba(217, 119, 6, 0.08);
+      --highlight: #fbbf24;
+    }
+
+    [data-theme="titanium"] {
+      --bg-body: #060607;
+      --bg-card: rgba(18, 18, 22, 0.85);
+      --border-card: rgba(255, 255, 255, 0.09);
+      --border-card-hover: rgba(255, 255, 255, 0.35);
+      --accent-primary: #52525b;
+      --accent-gradient: linear-gradient(135deg, #3f3f46, #71717a);
+      --accent-glow: rgba(255, 255, 255, 0.1);
+      --accent-text: #f4f4f5;
+      --accent-subtle: rgba(255, 255, 255, 0.08);
+      --accent-border: rgba(255, 255, 255, 0.25);
+      --ambient-1: rgba(255, 255, 255, 0.06);
+      --ambient-2: rgba(180, 180, 180, 0.04);
+      --highlight: #ffffff;
+    }
+
+    body {
+      background-color: var(--bg-body);
+      transition: background-color 0.3s ease;
+    }
+
     /* Custom Scrollbars */
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -54,29 +108,27 @@
 
     /* Glassmorphism styling */
     .glass-card {
-      background: rgba(15, 23, 42, 0.75);
+      background: var(--bg-card);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.07);
-    }
-    .glass-card-hover {
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid var(--border-card);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .glass-card-hover:hover {
-      border-color: rgba(99, 102, 241, 0.3);
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px -2px rgba(99, 102, 241, 0.15);
+      border-color: var(--border-card-hover);
+      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6), 0 0 20px -2px var(--accent-glow);
     }
 
     /* Clean Markdown Editorial Styles */
     .report-prose {
       color: #cbd5e1;
       font-size: 0.9375rem;
-      line-height: 1.7;
+      line-height: 1.75;
     }
     .report-prose h1 {
       font-size: 1.625rem;
       font-weight: 700;
-      color: #f8fafc;
+      color: var(--highlight);
       letter-spacing: -0.025em;
       margin-top: 1.5rem;
       margin-bottom: 0.875rem;
@@ -86,7 +138,7 @@
     .report-prose h2 {
       font-size: 1.25rem;
       font-weight: 600;
-      color: #e2e8f0;
+      color: var(--highlight);
       letter-spacing: -0.015em;
       margin-top: 1.5rem;
       margin-bottom: 0.625rem;
@@ -97,7 +149,7 @@
     .report-prose h3 {
       font-size: 1.0625rem;
       font-weight: 600;
-      color: #cbd5e1;
+      color: #e2e8f0;
       margin-top: 1.25rem;
       margin-bottom: 0.5rem;
     }
@@ -126,11 +178,11 @@
       padding-left: 0.25rem;
     }
     .report-prose blockquote {
-      border-left: 3px solid #6366f1;
-      background: rgba(99, 102, 241, 0.06);
+      border-left: 3px solid var(--accent-primary);
+      background: var(--accent-subtle);
       padding: 0.875rem 1.25rem;
       border-radius: 0 0.5rem 0.5rem 0;
-      color: #c7d2fe;
+      color: var(--accent-text);
       margin-bottom: 1.25rem;
       font-style: normal;
     }
@@ -141,10 +193,10 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
       padding: 0.15rem 0.4rem;
       border-radius: 0.25rem;
-      color: #a5b4fc;
+      color: var(--accent-text);
     }
     .report-prose pre {
-      background: #090d16;
+      background: #04060b;
       border: 1px solid #1e293b;
       padding: 1rem;
       border-radius: 0.5rem;
@@ -163,7 +215,7 @@
       overflow: hidden;
     }
     .report-prose th {
-      background: #0f172a;
+      background: #0b1120;
       color: #94a3b8;
       font-weight: 600;
       text-transform: uppercase;
@@ -191,7 +243,6 @@
       margin: 1.5rem 0;
     }
 
-    /* Pulse animation for active step */
     @keyframes pulseGlow {
       0%, 100% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.6; transform: scale(1.15); }
@@ -201,12 +252,12 @@
     }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-indigo-500/30 selection:text-indigo-200">
+<body class="text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-cyan-500/30 selection:text-cyan-200">
 
-  <!-- Background Ambient Glow -->
+  <!-- Background Ambient Glows -->
   <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-    <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/10 rounded-full blur-[120px]"></div>
-    <div class="absolute top-1/3 -right-40 w-96 h-96 bg-emerald-600/10 rounded-full blur-[120px]"></div>
+    <div class="absolute -top-40 -left-40 w-96 h-96 rounded-full blur-[140px]" style="background-color: var(--ambient-1);"></div>
+    <div class="absolute top-1/3 -right-40 w-96 h-96 rounded-full blur-[140px]" style="background-color: var(--ambient-2);"></div>
   </div>
 
   <!-- Top Navigation Header -->
@@ -216,15 +267,16 @@
       <!-- Brand & Title -->
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-3">
-          <div class="relative flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-emerald-400 p-[1px] shadow-lg shadow-indigo-500/20">
+          <div class="relative flex items-center justify-center w-9 h-9 rounded-xl p-[1px] shadow-lg shadow-cyan-500/20" style="background: var(--accent-gradient);">
             <div class="w-full h-full bg-slate-950 rounded-[11px] flex items-center justify-center">
-              <i class="fa-solid fa-atom text-indigo-400 text-base pulse-glow"></i>
+              <i class="fa-solid fa-atom text-base pulse-glow" style="color: var(--accent-text);"></i>
             </div>
           </div>
           <div>
             <div class="flex items-center gap-2">
               <span class="font-bold text-base tracking-tight text-white">ARAA</span>
-              <span class="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-indigo-950/80 text-indigo-300 border border-indigo-800/60">v1.0 Pro</span>
+              <span class="text-[10px] font-mono font-medium px-2 py-0.5 rounded-full border" 
+                    style="background: var(--accent-subtle); color: var(--accent-text); border-color: var(--accent-border);">v1.0 Pro</span>
             </div>
             <p class="text-[11px] text-slate-400 hidden sm:block">Autonomous Research & Analysis Agent</p>
           </div>
@@ -233,25 +285,38 @@
         <!-- Mobile Jump Navigation -->
         <div class="flex items-center gap-1 md:hidden">
           <a href="#directivePanel" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white">Query</a>
-          <a href="#reportPanel" class="text-xs px-2.5 py-1 rounded-lg bg-indigo-900/60 text-indigo-300 border border-indigo-700/50">Report</a>
+          <a href="#reportPanel" class="text-xs px-2.5 py-1 rounded-lg border text-white" style="background: var(--accent-primary); border-color: var(--accent-border);">Report</a>
         </div>
       </div>
 
-      <!-- System Vitals (Horizontally scrollable on mobile) -->
+      <!-- Right Header Actions: Theme Switcher & System Vitals -->
       <div class="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 text-xs font-mono scrollbar-none">
         
+        <!-- Interactive Theme Palette Switcher -->
+        <div class="flex items-center space-x-1 px-2.5 py-1 rounded-full bg-slate-900/90 border border-slate-700/80 text-xs text-slate-300 shrink-0">
+          <i class="fa-solid fa-palette text-[11px]" style="color: var(--accent-text);"></i>
+          <span class="text-[11px] text-slate-400 hidden sm:inline">Theme:</span>
+          <select id="themeSelector" onchange="changeTheme(this.value)" class="bg-transparent text-xs text-slate-200 font-semibold focus:outline-none cursor-pointer">
+            <option value="sapphire">🔷 Sapphire Ocean</option>
+            <option value="emerald">🟢 Emerald Matrix</option>
+            <option value="amber">🟡 Cyber Amber</option>
+            <option value="titanium">⚪ Titanium Mono</option>
+          </select>
+        </div>
+
         <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-950/40 border border-emerald-800/40 text-emerald-400 shrink-0">
           <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
           <span>Docker Cluster</span>
         </div>
 
-        <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-indigo-950/40 border border-indigo-800/40 text-indigo-300 shrink-0">
-          <i class="fa-solid fa-brain text-[11px] text-indigo-400"></i>
+        <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full border shrink-0" 
+             style="background: var(--accent-subtle); color: var(--accent-text); border-color: var(--accent-border);">
+          <i class="fa-solid fa-brain text-[11px]"></i>
           <span>Gemini 3.5</span>
         </div>
 
-        <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-purple-950/40 border border-purple-800/40 text-purple-300 shrink-0">
-          <i class="fa-solid fa-shield-halved text-[11px] text-purple-400"></i>
+        <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-700 text-slate-300 shrink-0">
+          <i class="fa-solid fa-shield-halved text-[11px] text-emerald-400"></i>
           <span>Anti-SSRF/TOCTOU</span>
         </div>
 
@@ -276,12 +341,12 @@
         <!-- Header & Role Selector -->
         <div class="flex items-center justify-between mb-3.5">
           <label class="text-xs font-semibold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-            <i class="fa-solid fa-compass text-indigo-400 text-sm"></i>
+            <i class="fa-solid fa-compass text-sm" style="color: var(--accent-text);"></i>
             <span>Research Directive</span>
           </label>
           
           <div class="flex items-center space-x-1.5 bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1">
-            <i class="fa-solid fa-user-shield text-[10px] text-indigo-400"></i>
+            <i class="fa-solid fa-user-shield text-[10px]" style="color: var(--accent-text);"></i>
             <span class="text-[11px] text-slate-400">Role:</span>
             <select id="userRole" class="bg-transparent text-xs text-slate-200 font-medium focus:outline-none cursor-pointer">
               <option value="researcher" selected>Researcher</option>
@@ -295,7 +360,7 @@
         <!-- Input Box -->
         <div class="relative">
           <textarea id="taskInput" rows="3" 
-            class="w-full bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500/80 focus:ring-1 focus:ring-indigo-500/40 transition resize-none leading-relaxed" 
+            class="w-full bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500/80 focus:ring-1 focus:ring-cyan-500/40 transition resize-none leading-relaxed" 
             placeholder="What would you like ARAA to investigate autonomously?"></textarea>
           
           <div class="absolute bottom-2.5 right-3 text-[10px] text-slate-500 font-mono hidden sm:block">
@@ -308,24 +373,25 @@
           <span class="text-[11px] text-slate-500 mr-1"><i class="fa-solid fa-bolt text-[10px] text-amber-400 mr-1"></i>Try:</span>
           
           <button onclick="setQuery('What company manufactures Twinscan EXE:5000 and who is its primary customer?')" 
-            class="text-xs px-2.5 py-1 rounded-lg bg-slate-800/70 hover:bg-slate-700/80 border border-slate-700/50 text-slate-300 hover:text-white transition flex items-center gap-1.5">
+            class="text-xs px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition flex items-center gap-1.5">
             <span>🔬 ASML Lithography</span>
           </button>
           
           <button onclick="setQuery('Calculate the compound interest on $50,000 at 7.5% annual rate for 5 years.')" 
-            class="text-xs px-2.5 py-1 rounded-lg bg-slate-800/70 hover:bg-slate-700/80 border border-slate-700/50 text-slate-300 hover:text-white transition flex items-center gap-1.5">
+            class="text-xs px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition flex items-center gap-1.5">
             <span>🧮 Compound Math</span>
           </button>
           
           <button onclick="setQuery('What are the top challenges software engineers face in 2026?')" 
-            class="text-xs px-2.5 py-1 rounded-lg bg-slate-800/70 hover:bg-slate-700/80 border border-slate-700/50 text-slate-300 hover:text-white transition flex items-center gap-1.5">
+            class="text-xs px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition flex items-center gap-1.5">
             <span>💻 Software Eng 2026</span>
           </button>
         </div>
 
         <!-- Primary Action Button -->
         <button id="startBtn" onclick="startResearch()" 
-          class="mt-4 w-full h-11 bg-gradient-to-r from-indigo-600 via-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-medium rounded-xl shadow-lg shadow-indigo-600/25 flex items-center justify-center space-x-2 transition active:scale-[0.99] cursor-pointer">
+          class="mt-4 w-full h-11 text-white font-semibold rounded-xl shadow-lg flex items-center justify-center space-x-2 transition active:scale-[0.99] cursor-pointer"
+          style="background: var(--accent-gradient);">
           <i class="fa-solid fa-play text-xs"></i>
           <span>Launch Autonomous Investigation</span>
         </button>
@@ -349,7 +415,7 @@
             <button onclick="clearTerminal()" title="Clear logs" class="text-slate-500 hover:text-slate-300 text-xs transition">
               <i class="fa-solid fa-eraser"></i>
             </button>
-            <span id="runBadge" class="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 border border-slate-700/50">IDLE</span>
+            <span id="runBadge" class="text-[11px] font-mono px-2 py-0.5 rounded-md bg-slate-900 text-slate-400 border border-slate-800">IDLE</span>
           </div>
         </div>
 
@@ -396,7 +462,8 @@
           <!-- View Switcher Tabs -->
           <div class="flex items-center space-x-1.5 bg-slate-900/90 border border-slate-800 p-1 rounded-xl w-fit">
             <button onclick="switchTab('report')" id="tabBtnReport" 
-              class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white transition flex items-center gap-1.5">
+              class="text-xs font-semibold px-3 py-1.5 rounded-lg text-white transition flex items-center gap-1.5"
+              style="background: var(--accent-primary);">
               <i class="fa-solid fa-file-lines text-[11px]"></i>
               <span>Report</span>
             </button>
@@ -417,7 +484,7 @@
             
             <!-- History Selector -->
             <select id="runHistorySelect" onchange="selectPastRun(this.value)" 
-              class="text-xs bg-slate-900 border border-slate-700 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-indigo-500 max-w-[180px] sm:max-w-[220px] truncate cursor-pointer">
+              class="text-xs bg-slate-900 border border-slate-700 text-slate-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-cyan-500 max-w-[180px] sm:max-w-[220px] truncate cursor-pointer">
               <option value="">-- Past Runs --</option>
             </select>
 
@@ -461,7 +528,7 @@
 
         <!-- TAB 3: Raw JSON Inspector -->
         <div id="tabRaw" class="hidden flex-1 overflow-y-auto mt-4 pr-1">
-          <pre id="rawContainer" class="bg-slate-950 border border-slate-800/80 p-4 rounded-xl font-mono text-xs text-indigo-300 overflow-x-auto leading-relaxed">{}</pre>
+          <pre id="rawContainer" class="bg-slate-950 border border-slate-800/80 p-4 rounded-xl font-mono text-xs overflow-x-auto leading-relaxed" style="color: var(--accent-text);">{}</pre>
         </div>
 
       </div>
@@ -488,6 +555,18 @@
     let eventSource = null;
     let currentRawReport = '';
 
+    // Theme Switcher Logic
+    function changeTheme(themeName) {
+      document.documentElement.setAttribute('data-theme', themeName);
+      localStorage.setItem('araa-theme', themeName);
+      const sel = document.getElementById('themeSelector');
+      if (sel) sel.value = themeName;
+    }
+
+    // Initialize Theme
+    const savedTheme = localStorage.getItem('araa-theme') || 'sapphire';
+    changeTheme(savedTheme);
+
     // Keyboard Shortcut (Ctrl+Enter / Cmd+Enter to launch)
     document.getElementById('taskInput').addEventListener('keydown', function(e) {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
@@ -511,13 +590,16 @@
       const tabs = ['report', 'evidence', 'raw'];
       tabs.forEach(t => {
         document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`).classList.add('hidden');
-        document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`).className = 
-          'text-xs font-semibold px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition flex items-center gap-1.5';
+        const btn = document.getElementById(`tabBtn${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        btn.className = 'text-xs font-semibold px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 transition flex items-center gap-1.5';
+        btn.style.background = 'transparent';
       });
 
-      document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`).classList.remove('hidden');
-      document.getElementById(`tabBtn${tab.charAt(0).toUpperCase() + tab.slice(1)}`).className = 
-        'text-xs font-semibold px-3 py-1.5 rounded-lg bg-indigo-600 text-white transition flex items-center gap-1.5';
+      const activeTab = document.getElementById(`tab${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+      activeTab.classList.remove('hidden');
+      const activeBtn = document.getElementById(`tabBtn${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+      activeBtn.className = 'text-xs font-semibold px-3 py-1.5 rounded-lg text-white transition flex items-center gap-1.5';
+      activeBtn.style.background = 'var(--accent-primary)';
     }
 
     function addLog(title, details, type = 'info') {
@@ -530,9 +612,9 @@
 
       const item = document.createElement('div');
       
-      let borderCol = 'border-indigo-500/60 bg-indigo-950/20';
-      let icon = 'fa-arrow-right text-indigo-400';
-      if (type === 'tool') { borderCol = 'border-cyan-500/60 bg-cyan-950/20'; icon = 'fa-screwdriver-wrench text-cyan-400'; }
+      let borderCol = 'border-cyan-500/60 bg-cyan-950/20';
+      let icon = 'fa-arrow-right text-cyan-400';
+      if (type === 'tool') { borderCol = 'border-sky-500/60 bg-sky-950/20'; icon = 'fa-screwdriver-wrench text-sky-400'; }
       if (type === 'success') { borderCol = 'border-emerald-500/60 bg-emerald-950/20'; icon = 'fa-check text-emerald-400'; }
       if (type === 'warn') { borderCol = 'border-amber-500/60 bg-amber-950/20'; icon = 'fa-triangle-exclamation text-amber-400'; }
       if (type === 'error') { borderCol = 'border-rose-500/60 bg-rose-950/20'; icon = 'fa-xmark text-rose-400'; }
@@ -569,13 +651,15 @@
       addLog('Initialization', `Directive: "${task}"\nAuthorized Role: ${role}`);
 
       document.getElementById('runBadge').innerText = 'RUNNING';
-      document.getElementById('runBadge').className = 'text-[11px] font-mono px-2 py-0.5 rounded-md bg-indigo-950 text-indigo-300 border border-indigo-700/60 animate-pulse';
+      document.getElementById('runBadge').className = 'text-[11px] font-mono px-2 py-0.5 rounded-md text-cyan-300 border border-cyan-700/60 animate-pulse';
+      document.getElementById('runBadge').style.background = 'var(--accent-subtle)';
 
       // Switch to report tab and show loading
       switchTab('report');
       document.getElementById('reportContainer').innerHTML = `
         <div class="text-center py-24 text-slate-400 flex flex-col items-center justify-center space-y-3">
-          <div class="w-12 h-12 rounded-xl bg-indigo-950/60 border border-indigo-700/50 flex items-center justify-center text-indigo-400 text-lg">
+          <div class="w-12 h-12 rounded-xl border flex items-center justify-center text-lg" 
+               style="background: var(--accent-subtle); border-color: var(--accent-border); color: var(--accent-text);">
             <i class="fa-solid fa-brain animate-pulse"></i>
           </div>
           <p class="font-medium">Autonomous investigation in progress...</p>
@@ -737,7 +821,7 @@
       } else {
         document.getElementById('reportContainer').innerHTML = `
           <div class="text-center py-20 text-slate-400">
-            <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3 text-indigo-400"></i>
+            <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3" style="color: var(--accent-text);"></i>
             <p>Synthesizing verified report...</p>
           </div>
         `;
@@ -761,7 +845,7 @@
           const card = document.createElement('div');
           card.className = 'p-4 rounded-xl bg-slate-900/90 border border-slate-800/80 text-xs font-mono space-y-2';
           card.innerHTML = `
-            <div class="flex items-center justify-between text-indigo-400 font-semibold">
+            <div class="flex items-center justify-between font-semibold" style="color: var(--accent-text);">
               <span class="flex items-center gap-1.5">
                 <i class="fa-solid fa-quote-left text-slate-500"></i>
                 <span>[${idx + 1}] ${ev.tool_name}</span>
@@ -769,7 +853,7 @@
               <span class="px-2 py-0.5 rounded-full text-[10px] ${ev.trust_level === 'trusted' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-amber-950 text-amber-400 border border-amber-800'}">${ev.trust_level}</span>
             </div>
             <p class="text-slate-300 font-sans text-xs leading-relaxed">"${ev.excerpt}"</p>
-            ${ev.source_url ? `<a href="${ev.source_url}" target="_blank" class="text-indigo-400 hover:text-indigo-300 underline truncate block text-[11px]"><i class="fa-solid fa-link text-[10px] mr-1"></i>${ev.source_url}</a>` : ''}
+            ${ev.source_url ? `<a href="${ev.source_url}" target="_blank" class="hover:underline truncate block text-[11px]" style="color: var(--accent-text);"><i class="fa-solid fa-link text-[10px] mr-1"></i>${ev.source_url}</a>` : ''}
           `;
           evContainer.appendChild(card);
         });
