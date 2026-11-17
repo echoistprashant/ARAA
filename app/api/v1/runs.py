@@ -69,6 +69,12 @@ async def _execute_agent_run(run_id: str, task: str, user_role: str) -> None:
 
         final_state = await orchestrator.run(state)
 
+        # Broadcast synthesis phase and checkpoint intermediate results
+        active_runs[run_id]["step_count"] = final_state.step_count
+        if final_state.final_report:
+            active_runs[run_id]["final_report"] = final_state.final_report
+        await broadcast_event("synthesizing", {"run_id": run_id, "message": "Synthesizing verified report & empirical audit..."})
+
         # Post-run synthesis and verification
         synthesizer = Synthesizer(llm=llm)
         report = await synthesizer.synthesize(task, final_state.evidence)

@@ -159,9 +159,14 @@
             </button>
           </div>
 
-          <!-- Grounding Badge -->
-          <div id="groundingBadge" class="hidden text-xs font-mono px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-700">
-            Audit: VERIFIED (100% Grounded)
+          <!-- History & Grounding Badge -->
+          <div class="flex items-center space-x-2">
+            <select id="runHistorySelect" onchange="selectPastRun(this.value)" class="text-xs bg-gray-900 border border-gray-700 text-gray-300 rounded px-2 py-1 focus:outline-none focus:border-indigo-500">
+              <option value="">-- Past Runs --</option>
+            </select>
+            <div id="groundingBadge" class="hidden text-xs font-mono px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-700">
+              Audit: VERIFIED (100% Grounded)
+            </div>
           </div>
         </div>
 
@@ -305,16 +310,20 @@
 
       eventSource.addEventListener('run_completed', async (e) => {
         const data = JSON.parse(e.data);
-        addLog('Execution Finished', `Total turns: ${data.steps} | Cost: $${data.cost_usd}`, 'success');
-        finishRun();
+        addLog('Trajectory Finished', `Turns completed: ${data.steps} | Tokens: ${data.total_tokens || 0}`, 'tool');
+      });
+
+      eventSource.addEventListener('synthesizing', (e) => {
+        addLog('Auditing & Synthesis', 'Verifying citations & generating finalized report...', 'tool');
       });
 
       eventSource.addEventListener('run_finished', (e) => {
+        addLog('Report Ready', 'Autonomous synthesis & empirical grounding audit completed.', 'success');
         finishRun();
       });
 
       eventSource.onerror = (err) => {
-        // SSE disconnected or complete
+        // SSE disconnected or closed - poll backend to get completed result
         finishRun();
       };
     }
@@ -334,63 +343,169 @@
       }
     }
 
+    let isPolling = false;
     async function finishRun() {
+      if (isPolling) return;
+      isPolling = true;
+
       if (eventSource) {
         eventSource.close();
         eventSource = null;
       }
 
-      document.getElementById('runBadge').innerText = 'COMPLETED';
-      document.getElementById('runBadge').className = 'text-xs font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400';
+      // Robust poll until status is completed or failed (max 25 attempts x 1.2s = 30s timeout)
+      let data = null;
+      for (let attempt = 0; attempt < 25; attempt++) {
+        if (!currentRunId) break;
+        try {
+          const res = await fetch(`/api/v1/runs/${currentRunId}`);
+          if (res.ok) {
+            data = await res.json();
+            if (data.status === 'completed' || data.status === 'failed') {
+              break;
+            }
+          }
+        } catch (e) {
+          console.warn("Polling error:", e);
+        }
+        await new Promise(r => setTimeout(r, 1200));
+      }
+
+      isPolling = false;
 
       const startBtn = document.getElementById('startBtn');
       startBtn.disabled = false;
       startBtn.innerHTML = '<i class="fa-solid fa-play text-xs"></i> <span>Launch Autonomous Investigation</span>';
 
-      // Fetch final report and evidence
-      if (currentRunId) {
-        const res = await fetch(`/api/v1/runs/${currentRunId}`);
-        const data = await res.json();
+      if (!data) return;
 
-        // Render Markdown
-        if (data.markdown_report) {
-          document.getElementById('reportContainer').innerHTML = marked.parse(data.markdown_report);
-        } else if (data.final_report) {
-          document.getElementById('reportContainer').innerHTML = marked.parse(data.final_report);
-        }
+      const isSuccess = data.status === 'completed';
+      document.getElementById('runBadge').innerText = data.status.toUpperCase();
+      document.getElementById('runBadge').className = isSuccess 
+        ? 'text-xs font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400'
+        : 'text-xs font-mono px-2 py-0.5 rounded bg-rose-950 text-rose-400';
 
-        // Render Grounding Score Badge
-        if (data.grounding_score !== null) {
-          const badge = document.getElementById('groundingBadge');
-          badge.classList.remove('hidden');
-          badge.innerText = `Audit: ${data.audit_passed ? 'VERIFIED' : 'UNVERIFIED'} (${Math.round(data.grounding_score * 100)}% Grounded)`;
-        }
+      if (data.error) {
+        addLog('Run Failed', data.error, 'error');
+      }
 
-        // Render Evidence Tab
-        const evContainer = document.getElementById('evidenceContainer');
-        evContainer.innerHTML = '';
-        if (data.evidence && data.evidence.length > 0) {
-          data.evidence.forEach((ev, idx) => {
-            const card = document.createElement('div');
-            card.className = 'p-3 rounded-lg bg-gray-900 border border-gray-800 text-xs font-mono';
-            card.innerHTML = `
-              <div class="flex items-center justify-between text-indigo-400 font-bold mb-1">
-                <span>[${idx + 1}] ${ev.tool_name}</span>
-                <span class="px-1.5 py-0.5 rounded text-[10px] ${ev.trust_level === 'trusted' ? 'bg-emerald-950 text-emerald-400' : 'bg-amber-950 text-amber-400'}">${ev.trust_level}</span>
-              </div>
-              <p class="text-gray-300 font-sans text-xs mb-2">"${ev.excerpt}"</p>
-              ${ev.source_url ? `<a href="${ev.source_url}" target="_blank" class="text-indigo-400 underline truncate block">${ev.source_url}</a>` : ''}
-            `;
-            evContainer.appendChild(card);
+      renderRunData(data);
+      await loadRunHistory();
+    }
+
+    function renderRunData(data) {
+      if (!data) return;
+
+      // 1. Render Markdown Report
+      const content = data.markdown_report || data.final_report;
+      if (content) {
+        document.getElementById('reportContainer').innerHTML = marked.parse(content);
+      } else if (data.error) {
+        document.getElementById('reportContainer').innerHTML = `
+          <div class="p-4 rounded-lg bg-rose-950/50 border border-rose-800 text-rose-200">
+            <h3 class="font-bold mb-1"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i> Execution Error</h3>
+            <p class="font-mono text-xs">${data.error}</p>
+          </div>
+        `;
+      } else {
+        document.getElementById('reportContainer').innerHTML = `
+          <div class="text-center py-20 text-gray-500">
+            <i class="fa-solid fa-circle-notch fa-spin text-4xl mb-3 text-indigo-400"></i>
+            <p>Synthesizing verified report...</p>
+          </div>
+        `;
+      }
+
+      // 2. Render Grounding Score Badge
+      const badge = document.getElementById('groundingBadge');
+      if (data.grounding_score !== null && data.grounding_score !== undefined) {
+        badge.classList.remove('hidden');
+        badge.innerText = `Audit: ${data.audit_passed ? 'VERIFIED' : 'UNVERIFIED'} (${Math.round(data.grounding_score * 100)}% Grounded)`;
+      } else {
+        badge.classList.add('hidden');
+      }
+
+      // 3. Render Evidence Tab
+      const evContainer = document.getElementById('evidenceContainer');
+      evContainer.innerHTML = '';
+      if (data.evidence && data.evidence.length > 0) {
+        data.evidence.forEach((ev, idx) => {
+          const card = document.createElement('div');
+          card.className = 'p-3 rounded-lg bg-gray-900 border border-gray-800 text-xs font-mono';
+          card.innerHTML = `
+            <div class="flex items-center justify-between text-indigo-400 font-bold mb-1">
+              <span>[${idx + 1}] ${ev.tool_name}</span>
+              <span class="px-1.5 py-0.5 rounded text-[10px] ${ev.trust_level === 'trusted' ? 'bg-emerald-950 text-emerald-400' : 'bg-amber-950 text-amber-400'}">${ev.trust_level}</span>
+            </div>
+            <p class="text-gray-300 font-sans text-xs mb-2">"${ev.excerpt}"</p>
+            ${ev.source_url ? `<a href="${ev.source_url}" target="_blank" class="text-indigo-400 underline truncate block">${ev.source_url}</a>` : ''}
+          `;
+          evContainer.appendChild(card);
+        });
+      } else {
+        evContainer.innerHTML = '<div class="text-center py-20 text-gray-500">No empirical evidence gathered.</div>';
+      }
+
+      // 4. Render Raw JSON
+      document.getElementById('rawContainer').innerText = JSON.stringify(data, null, 2);
+    }
+
+    async function loadRunHistory() {
+      try {
+        const res = await fetch('/api/v1/runs');
+        if (!res.ok) return;
+        const runs = await res.json();
+        const sel = document.getElementById('runHistorySelect');
+        sel.innerHTML = '<option value="">-- Past Runs --</option>';
+
+        if (Array.isArray(runs) && runs.length > 0) {
+          runs.forEach(r => {
+            const opt = document.createElement('option');
+            opt.value = r.run_id;
+            const shortTask = (r.task || 'Run').length > 30 ? (r.task || 'Run').slice(0, 30) + '...' : (r.task || 'Run');
+            opt.text = `${r.status === 'completed' ? '✓' : '✗'} ${shortTask} (${r.run_id.slice(-6)})`;
+            if (r.run_id === currentRunId) opt.selected = true;
+            sel.appendChild(opt);
           });
-        } else {
-          evContainer.innerHTML = '<div class="text-center py-20 text-gray-500">No empirical evidence gathered.</div>';
-        }
 
-        // Render Raw JSON
-        document.getElementById('rawContainer').innerText = JSON.stringify(data, null, 2);
+          // If no active run rendered yet, render latest completed run
+          if (!currentRunId) {
+            const completed = runs.filter(r => r.status === 'completed' && (r.markdown_report || r.final_report));
+            if (completed.length > 0) {
+              const latest = completed[completed.length - 1];
+              currentRunId = latest.run_id;
+              renderRunData(latest);
+              document.getElementById('taskInput').value = latest.task || '';
+              document.getElementById('runBadge').innerText = 'COMPLETED';
+              document.getElementById('runBadge').className = 'text-xs font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400';
+              addLog('Session Restored', `Loaded latest completed run: "${latest.task}"`, 'success');
+              sel.value = latest.run_id;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Could not load history:", e);
       }
     }
+
+    async function selectPastRun(runId) {
+      if (!runId) return;
+      currentRunId = runId;
+      try {
+        const res = await fetch(`/api/v1/runs/${runId}`);
+        const data = await res.json();
+        renderRunData(data);
+        if (data.task) document.getElementById('taskInput').value = data.task;
+        document.getElementById('runBadge').innerText = data.status.toUpperCase();
+        document.getElementById('runBadge').className = data.status === 'completed' 
+          ? 'text-xs font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400'
+          : 'text-xs font-mono px-2 py-0.5 rounded bg-rose-950 text-rose-400';
+      } catch (e) {
+        console.error("Failed to load run:", e);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', loadRunHistory);
   </script>
 </body>
 </html>
