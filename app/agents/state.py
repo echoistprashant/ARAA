@@ -51,6 +51,7 @@ class RunState(BaseModel):
     run_id: str
     tenant_id: str = "default_tenant"
     user_id: str = "default_user"
+    user_role: str = "researcher"
     task: str
     status: RunStatus = RunStatus.QUEUED
     plan: RunPlan | None = None
