@@ -5,6 +5,7 @@ from pydantic import BaseModel, create_model
 
 from app.mcp_servers.research_tools_server import MCPResearchServer
 from app.tools.base import RiskLevel, Tool, ToolContext, ToolResult
+from app.tools.mcp.security import MCPSecurityPolicy
 from app.tools.registry import ToolRegistry
 
 
@@ -19,6 +20,7 @@ class DynamicMCPTool:
         input_schema: dict[str, Any],
         client: "MCPClient",
         risk_level: RiskLevel = RiskLevel.READ,
+        policy: MCPSecurityPolicy | None = None,
     ):
         self._name = name
         self._mcp_tool_name = mcp_tool_name
@@ -26,6 +28,7 @@ class DynamicMCPTool:
         self._input_schema = input_schema
         self._client = client
         self._risk_level = risk_level
+        self._policy = policy
         self._args_schema = self._create_pydantic_schema(name, input_schema)
 
     @property
@@ -68,6 +71,13 @@ class DynamicMCPTool:
         return create_model(model_name, **fields)
 
     async def execute(self, args: Any, ctx: ToolContext) -> ToolResult:
+        if self._policy and not self._policy.is_tool_allowed(self._mcp_tool_name):
+            return ToolResult(
+                content=f"Security Policy violation: MCP tool '{self._mcp_tool_name}' is blocked.",
+                status="failed",
+                trust_level="untrusted",
+            )
+
         if isinstance(args, BaseModel):
             raw_args = args.model_dump()
         elif isinstance(args, dict):
@@ -82,10 +92,18 @@ class DynamicMCPTool:
             return ToolResult(content=error_msg, status="failed", trust_level="untrusted")
 
         output_text = response["content"][0]["text"] if response.get("content") else ""
+        truncated = False
+        trust = "untrusted" if self._policy else "trusted"
+
+        if self._policy:
+            output_text, truncated = self._policy.sanitize_result(output_text)
+            trust = self._policy.default_trust
+
         return ToolResult(
             content=output_text,
             status="succeeded",
-            trust_level="trusted",
+            truncated=truncated,
+            trust_level=trust,
         )
 
 
@@ -129,6 +147,7 @@ class MCPClient:
         registry: ToolRegistry,
         prefix: str = "mcp_",
         risk_level: RiskLevel = RiskLevel.READ,
+        policy: MCPSecurityPolicy | None = None,
     ) -> list[str]:
         """Discovers tools on the MCP server and registers dynamic ARAA tools into the registry."""
         mcp_tools = await self.list_tools()
@@ -136,7 +155,14 @@ class MCPClient:
 
         for tool_def in mcp_tools:
             original_name = tool_def["name"]
-            prefixed_name = f"{prefix}{original_name}" if prefix else original_name
+
+            if policy:
+                if not policy.is_tool_allowed(original_name):
+                    continue
+                prefixed_name = policy.format_namespaced_name(original_name)
+            else:
+                prefixed_name = f"{prefix}{original_name}" if prefix else original_name
+
             tool_adapter = DynamicMCPTool(
                 name=prefixed_name,
                 mcp_tool_name=original_name,
@@ -144,6 +170,7 @@ class MCPClient:
                 input_schema=tool_def.get("inputSchema", {}),
                 client=self,
                 risk_level=risk_level,
+                policy=policy,
             )
             registry.register(tool_adapter)
             registered_names.append(prefixed_name)
