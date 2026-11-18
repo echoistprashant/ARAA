@@ -1,0 +1,52 @@
+[
+ {
+  "mode": "redesign",
+  "depth": "full",
+  "scope": "app",
+  "shape": "app screen",
+  "theme": "console",
+  "axes": "dark/grotesk-sans/chromatic-amber",
+  "hero": "workbench split",
+  "nav": "kept",
+  "footer": "kept",
+  "imagery": "none",
+  "photos": [],
+  "entry": "2026-11-18",
+  "fingerprint": "console-app-workbench-graphite",
+  "sections": [
+   "Research directive",
+   "Live trajectory telemetry",
+   "Results inspector"
+  ],
+  "signature": "live trajectory telemetry and grounding audit inspector",
+  "waived": [],
+  "prompt": "Autonomous Research and Analysis Agent web application and technical research console",
+  "date": "2026-11-18"
+ },
+ {
+  "mode": "redesign",
+  "depth": "full",
+  "scope": "app",
+  "shape": "app screen",
+  "theme": "exa-minimal",
+  "axes": "light/grotesk-sans/chromatic-blue",
+  "hero": "centered playground card",
+  "nav": "kept",
+  "footer": "kept",
+  "imagery": "none",
+  "photos": [],
+  "entry": "2026-11-18",
+  "fingerprint": "exa-playground-clean-white",
+  "sections": [
+   "Minimalist top navigation",
+   "Centered hero & telemetry",
+   "Playground directive card",
+   "Live agent trajectory stream",
+   "Grounding results workspace"
+  ],
+  "signature": "Exa-inspired unified playground with split trajectory and report tabs",
+  "waived": [],
+  "prompt": "Autonomous Research and Analysis Agent Exa-inspired redesign with pure white canvas and royal blue accent",
+  "date": "2026-11-18"
+ }
+]

@@ -7,6 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from fastapi.staticfiles import StaticFiles
+
 from app.api.v1.approvals import router as approvals_router
 from app.api.v1.events import router as events_router
 from app.api.v1.health import router as health_router
@@ -67,13 +69,31 @@ def create_app() -> FastAPI:
     app.include_router(events_router, prefix="/api/v1")
     app.include_router(runs_router, prefix="/api/v1")
 
-    # Interactive Frontend
+    # Interactive Frontend & Static Assets
+    static_dir = Path(__file__).resolve().parent / "static"
+    if static_dir.exists():
+        app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
     @app.get("/", include_in_schema=False)
     async def serve_frontend():
-        static_file = Path(__file__).resolve().parent / "static" / "index.html"
+        static_file = static_dir / "index.html"
         if static_file.exists():
             return FileResponse(static_file)
         return HTMLResponse("<h1>ARAA API is running.</h1>")
+
+    @app.get("/tokens.css", include_in_schema=False)
+    async def serve_tokens():
+        file = static_dir / "tokens.css"
+        if file.exists():
+            return FileResponse(file, media_type="text/css")
+        return HTMLResponse("Not Found", status_code=404)
+
+    @app.get("/base.css", include_in_schema=False)
+    async def serve_base():
+        file = static_dir / "base.css"
+        if file.exists():
+            return FileResponse(file, media_type="text/css")
+        return HTMLResponse("Not Found", status_code=404)
 
     return app
 
