@@ -15,6 +15,9 @@
 
 ---
 
+> 🚀 **Live Production Application:** **[https://araa.prshnt.com](https://araa.prshnt.com)**  
+> ARAA is fully deployed and accessible globally. No local installation, Docker containers, or API keys are required to use the agent.
+
 </div>
 
 ## Overview
@@ -102,14 +105,28 @@ ARAA is deployed live in production using permanent free-tier services:
 
 ---
 
-## Quickstart (Local Development)
+## Getting Started & Live Access
 
-### 1. Prerequisites
+### 🚀 Instant Access (Production Live)
+
+The fastest way to experience ARAA is through the live deployment:
+
+👉 **[https://araa.prshnt.com](https://araa.prshnt.com)**
+
+The live deployment is connected to Google Gemini, Neon PostgreSQL (`pgvector`), Upstash Redis, and Cloudflare edge security. You can run multi-step research investigations, inspect streaming agent trajectories, review empirical grounding audits, and test all four permission roles directly in your browser.
+
+---
+
+### 🛠️ Developer Setup (Self-Hosting from Source)
+
+If you wish to contribute to ARAA or run a self-hosted instance locally:
+
+#### 1. Prerequisites
 - Python 3.12+
-- Docker & Docker Compose (optional for local DB/Redis)
+- Docker & Docker Compose (for local database and Redis cluster)
 - Free Gemini API key from [Google AI Studio](https://aistudio.google.com/)
 
-### 2. Installation
+#### 2. Installation
 ```bash
 # Clone the repository
 git clone https://github.com/echoistprashant/ARAA.git
@@ -127,7 +144,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 3. Environment Setup
+#### 3. Environment Setup
 Create a `.env` file from the provided template:
 ```bash
 cp .env.example .env
@@ -155,7 +172,7 @@ REDIS_URL=redis://localhost:6380/0
 JWT_SECRET=change-this-to-a-secure-random-secret
 ```
 
-### 4. Run Locally
+#### 4. Launch Local Development Server
 ```bash
 # Start local Postgres (pgvector) and Redis
 docker compose up -d
@@ -163,7 +180,7 @@ docker compose up -d
 # Start ARAA development server
 uvicorn app.main:create_app --factory --reload --port 8000
 ```
-Open [http://localhost:8000](http://localhost:8000) in your browser.
+The server will start on port 8000, or you can access the live production deployment anytime at **[https://araa.prshnt.com](https://araa.prshnt.com)**.
 
 ---
 
