@@ -27,7 +27,7 @@ def setup_logging(debug: bool = True) -> None:
             ]
         else:
             processors = shared_processors + [
-                structlog.processors.format_by_level,
+                structlog.processors.format_exc_info,
                 structlog.processors.JSONRenderer(),
             ]
 
