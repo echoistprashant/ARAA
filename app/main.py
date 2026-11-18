@@ -95,6 +95,13 @@ def create_app() -> FastAPI:
             return FileResponse(file, media_type="text/css")
         return HTMLResponse("Not Found", status_code=404)
 
+    @app.get("/logo.png", include_in_schema=False)
+    async def serve_logo():
+        file = static_dir / "logo.png"
+        if file.exists():
+            return FileResponse(file, media_type="image/png")
+        return HTMLResponse("Not Found", status_code=404)
+
     return app
 
 
