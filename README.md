@@ -1,139 +1,286 @@
+<div align="center">
+
 # Autonomous Research & Analysis Agent (ARAA)
 
-[![CI](https://github.com/echoistprashant/ARAA/actions/workflows/ci.yml/badge.svg)](https://github.com/echoistprashant/ARAA/actions/workflows/ci.yml)
-[![Python](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Cost: $0.00](https://img.shields.io/badge/Cost-$0.00%20Zero--Cost-brightgreen.svg)](#zero-cost-setup)
+**Deep web investigation, empirical evidence synthesis, and verifiable agent trajectories.**
 
-A production-grade, bounded, observable, and permission-controlled autonomous research agent that plans tasks, executes tools via **native Function Calling** and **Model Context Protocol (MCP)**, sandboxes code execution, and delivers citation-backed reports with human approval gates.
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-araa.prshnt.com-blue?style=for-the-badge&logo=cloudflare&logoColor=white)](https://araa.prshnt.com/)
+[![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![Docker](https://img.shields.io/badge/Docker-Production%20Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Zero Cost](https://img.shields.io/badge/Cost-$0.00%20Forever-22C55E?style=for-the-badge)](https://araa.prshnt.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
----
-
-## 1. Problem Solved
-
-Knowledge workers spend hours querying search engines, reading dozens of unstructured documents, writing scratchpad scripts to compute metrics, and cross-referencing conflicting numbers.
-
-* **Single LLM calls** hallucinate facts and cannot browse or compute accurately.
-* **Toy agents** get stuck in infinite loops, waste money, and execute unverified actions.
-* **ARAA** implements **bounded autonomy**: the LLM proposes actions within typed JSON schemas, but deterministic software controls the loop, enforces hard budgets, requires human approval for risky steps, and verifies every claim against recorded evidence.
+[**Explore Live Agent**](https://araa.prshnt.com/) • [**System Architecture**](#-system-architecture) • [**Security & Guardrails**](#-tool-permission--security-matrix) • [**Quickstart**](#-quickstart-local-development) • [**API Reference**](#-api--streaming-reference)
 
 ---
 
-## 2. Core Architecture
+</div>
+
+## Overview
+
+**ARAA (Autonomous Research and Analysis Agent)** is a production-grade, bounded, observable, and permission-governed autonomous agent. It decomposes complex research directives into auditable multi-step plans, gathers live web intelligence, runs sandboxed computations, and synthesizes grounded reports with verifiable citations.
+
+Unlike toy autonomous agents that loop indefinitely, hallucinate unchecked facts, or rack up surprise API costs, ARAA is built on the core principle:
+
+> **"The Model Proposes, The Policy Engine Disposes."**  
+> *The LLM is treated as an untrusted reasoning engine. Hard deterministic software controls state transitions, enforces cost and step budgets, sandboxes code execution, and requires cryptographic human approvals for privileged mutations.*
+
+---
+
+## Key Highlights
+
+- **Exa.ai-Inspired Minimalist Interface**: Clean, editorial-grade UI styled with *Instrument Serif*, *Inter*, and *JetBrains Mono*, complete with instant prompt chips, real-time telemetry, and dark/light themes.
+- **Frameworkless Wire-Level Control**: Built with raw `asyncio`, `httpx`, and `pydantic`—zero bloat from heavy frameworks like LangChain or AutoGen.
+- **Deterministic Loop & Anti-Stall Guard**: Automatically detects repetitive calls (3 identical actions with no new knowledge = automatic loop break) and enforces hard step/budget ceilings.
+- **Role-Based Access Control (RBAC) & HITL**: Distinct permission tiers (`Viewer`, `Researcher`, `Operator`, `Admin`) with cryptographic token-hashed Human-in-the-Loop approvals for side effects.
+- **Multi-Source Intelligence**: Dual-mode web search with **Tavily AI Search** and zero-key **DuckDuckGo**, protected by Anti-SSRF IP boundary validators.
+- **Isolated Code Sandbox**: Executes Python calculations and data processing in resource-capped subprocesses (`timeout: 5s`, `memory: 128MB`, strict stdout truncation).
+- **Episodic Vector Memory**: Native `pgvector` embeddings in PostgreSQL for persistent knowledge retrieval across investigation sessions.
+- **100% Zero-Cost Deployment**: Engineered to run on permanent free-tier cloud infrastructure (Neon Postgres + Upstash Redis + Google AI Studio + Cloudflare).
+
+---
+
+## System Architecture
 
 ```
-User Task ---> API (FastAPI) ---> Queue (Redis) ---> Worker (Orchestrator Loop)
-                                                           |
-          +------------------------------------------------+
-          |
-          v
-   [ 1. Planner ] ---> Decomposes goal into checkable sub-goals
-          |
-          v
-   [ 2. Loop (Reason -> Tool -> Observe) ]
-          |-- Step / Cost / Time Budget Enforcement
-          |-- Loop & Stall Detector (3 identical calls without new facts = abort)
-          |-- Policy & Risk Engine (Read / External / Write / Dangerous)
-          |-- Tool Execution (Local functions, MCP servers, Docker sandbox)
-          |-- Untrusted Data Boundaries & Provenance Recording
-          |-- Step Checkpoint in PostgreSQL
-          |
-          v
-   [ 3. Verifier & Synthesizer ] ---> Verifies claims vs evidence, outputs cited report
+User Directive ──► FastAPI (REST & SSE) ──► Redis Stream ──► Orchestrator Loop
+                                                                    │
+   ┌────────────────────────────────────────────────────────────────┴──────────────────┐
+   ▼                                                                                   ▼
+1. Planner Subsystem                                                    2. Deterministic Loop Controller
+   • Goal Decomposition                                                    • Step & Budget Ceilings
+   • Sub-task Sequencing                                                   • 3-Call Loop & Stall Detector
+                                                                           • Untrusted Data Sanitation
+                                                                           • Step Checkpoints in PostgreSQL
+                                                                                       │
+   ┌───────────────────────────────────────────────────────────────────────────────────┘
+   ▼
+3. Tool Execution Registry (RBAC & Policy Engine)
+   ├── Tier 1 (Read): Calculator, RAG Vector Search
+   ├── Tier 2 (External): Web Search (Tavily/DDG), Anti-SSRF URL Fetcher
+   ├── Tier 3 (Write / Sandboxed): Python Subprocess Sandbox (Resource Bounded)
+   └── Tier 4 (Dangerous): System Shell (Disabled by Default)
+   │
+   ▼
+4. Grounding Verifier & Synthesizer
+   • NLI Claim Checking vs. Recorded Evidence
+   • Grounding Audit Score Calculation (0 - 100%)
+   • Structured Final Markdown Report with Source Citations
 ```
 
 ---
 
-## 3. Tool Permission & Risk Tiers
+## Tool Permission & Security Matrix
 
-| Risk Tier | Examples | Policy |
+| Risk Tier | Tools Available | Default Policy | Human Approval Required? |
+| :--- | :--- | :--- | :---: |
+| **Tier 1: Read** | `calculator`, `evidence_search` | Auto-approved across all roles | No |
+| **Tier 2: Read External** | `web_search`, `fetch_url` | Auto-approved for `Researcher`, `Operator`, `Admin` | No |
+| **Tier 3: Write / Exec** | `python_sandbox` | Auto for `Operator`/`Admin`; Pauses for `Researcher` | **Yes (HITL)** |
+| **Tier 4: Dangerous** | `system_shell`, destructive ops | Strictly forbidden | **Disabled** |
+
+### Security Defenses Built-In
+1. **Anti-SSRF Protection**: Internal private networks (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `127.0.0.1`, `169.254.169.254` AWS/GCP metadata endpoints) are actively blocked from tool-based fetching.
+2. **Untrusted Data Isolation**: All external web excerpts are wrapped in untrusted boundary tags to prevent indirect prompt injection from hijacking agent instructions.
+3. **TOCTOU Defense**: Approval tokens are hashed against the exact proposed tool arguments. Altering arguments invalidates the approval token.
+
+---
+
+## Zero-Cost Cloud Deployment ($0.00/Month)
+
+ARAA is deployed live in production using permanent free-tier services:
+
+| Component | Provider | Tier Details |
 | :--- | :--- | :--- |
-| **Tier 1: Read** | `calculator`, `rag_search` | Auto-allowed |
-| **Tier 2: Read-External** | `web_search`, `fetch_url` | Allowed with domain policy, size caps, and SSRF blocking |
-| **Tier 3: Write / Side-Effect** | `send_email`, `create_ticket` | **Approval Required** (exact argument hash verified) |
-| **Tier 4: Dangerous** | `system_shell`, `delete_data` | **Disabled by default** |
+| **Edge & SSL** | [Cloudflare](https://www.cloudflare.com/) | Global DNS, DDoS protection, automatic SSL ([araa.prshnt.com](https://araa.prshnt.com/)) |
+| **Web Service** | [Render](https://render.com/) | Multi-stage Docker container runner (`python:3.12-slim`) |
+| **Database** | [Neon.tech](https://neon.tech/) | Serverless PostgreSQL with native `pgvector` support |
+| **Cache & Bus** | [Upstash](https://upstash.com/) | Serverless Redis (10,000 commands/day free) |
+| **LLM Provider** | [Google AI Studio](https://aistudio.google.com/) | Gemini 2.0 / 3.5 Flash Lite Free Tier |
+| **Web Search** | [Tavily](https://tavily.com/) / DuckDuckGo | 1,000 free requests/month with DuckDuckGo fallback |
 
 ---
 
-## 4. Zero-Cost Setup ($0.00)
+## Quickstart (Local Development)
 
-ARAA is engineered to run completely free of cost using open-source infrastructure and free developer tiers:
+### 1. Prerequisites
+- Python 3.12+
+- Docker & Docker Compose (optional for local DB/Redis)
+- Free Gemini API key from [Google AI Studio](https://aistudio.google.com/)
 
-* **LLM Engine:** Google AI Studio (Gemini 2.0 Flash Free Tier) or Groq Cloud Free Tier or local Ollama.
-* **Search Engine:** DuckDuckGo (Free, no API key needed) or Tavily (1,000 free requests/mo).
-* **Datastore:** PostgreSQL 16 + pgvector running in local Docker.
-* **Cache & Bus:** Redis 7 running in local Docker.
-* **Observability:** Self-hosted Langfuse via Docker.
+### 2. Installation
+```bash
+# Clone the repository
+git clone https://github.com/echoistprashant/ARAA.git
+cd ARAA
 
-### Quickstart
+# Create and activate virtual environment
+python -m venv .venv
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/echoistprashant/ARAA.git
-   cd ARAA
-   ```
+# Windows:
+.venv\Scripts\activate
+# Linux / macOS:
+source .venv/bin/activate
 
-2. **Create and activate a virtual environment:**
-   ```bash
-   python -m venv .venv
-   # Windows:
-   .venv\Scripts\activate
-   # Linux/macOS:
-   source .venv/bin/activate
-   ```
+# Install dependencies
+pip install -r requirements.txt
+```
 
-3. **Install dependencies:**
-   ```bash
-   pip install -e ".[dev]"
-   ```
+### 3. Environment Setup
+Create a `.env` file from the provided template:
+```bash
+cp .env.example .env
+```
+Populate your environment variables:
+```ini
+APP_ENV=local
+DEBUG=true
+PORT=8000
 
-4. **Configure environment:**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your free Gemini API key (https://aistudio.google.com/)
-   ```
+# LLM Configuration
+LLM_PROVIDER=gemini
+GEMINI_API_KEY=your_gemini_api_key_here
+PLANNER_MODEL=gemini-3.5-flash-lite
+ACTOR_MODEL=gemini-3.5-flash-lite
+VERIFIER_MODEL=gemini-3.5-flash-lite
 
-5. **Start local database & Redis:**
-   ```bash
-   docker compose up -d
-   ```
+# Search Configuration
+SEARCH_PROVIDER=duckduckgo
+# Optional: TAVILY_API_KEY=tvly-...
 
-6. **Run the API server:**
-   ```bash
-   uvicorn app.main:app --reload --port 8000
-   ```
-   Visit `http://localhost:8000/health` or `http://localhost:8000/docs`.
+# Storage (Docker Compose or Cloud)
+DATABASE_URL=postgresql+asyncpg://araa_user:araa_password@localhost:5433/araa_db
+REDIS_URL=redis://localhost:6380/0
+JWT_SECRET=change-this-to-a-secure-random-secret
+```
 
-7. **Run tests:**
-   ```bash
-   pytest
-   ```
+### 4. Run Locally
+```bash
+# Start local Postgres (pgvector) and Redis
+docker compose up -d
 
----
-
-## 5. Implementation Roadmap (16 Phases)
-
-* [x] **Phase 1: Project Setup & CI Skeleton** (Repo, 12-factor config, structured JSON logging, health probes, CI)
-* [ ] **Phase 2: LLM Tool-Calling Fundamentals** (Function calling at the wire level without frameworks)
-* [ ] **Phase 3: State & Deterministic Orchestrator** (RunState, budgets, loop detection)
-* [ ] **Phase 4: Tool Framework & Registry** (Pydantic schemas, timeouts, error taxonomy)
-* [ ] **Phase 5: Planning & Replanning** (Plan-and-execute vs ReAct)
-* [ ] **Phase 6: Persistence & Resume** (Step checkpoints, idempotency keys, crash recovery)
-* [ ] **Phase 7: Memory & Evidence Store** (Working memory, episodic compression, pgvector)
-* [ ] **Phase 8: Model Context Protocol (MCP)** (MCP client adapter & research tool servers)
-* [ ] **Phase 9: Permissions & Human-in-the-Loop** (Policy engine, approval gates, TOCTOU defense)
-* [ ] **Phase 10: Sandboxed Code Execution** (Isolated container, no-network, resource limits)
-* [ ] **Phase 11: Verification & Synthesis** (Claim checking against evidence)
-* [ ] **Phase 12: Agent Evaluation (AgentOps)** (30–60 task benchmark, pass@k, trajectory metrics)
-* [ ] **Phase 13: Observability & Tracing** (OpenTelemetry spans, Langfuse dashboard)
-* [ ] **Phase 14: Security Hardening** (SSRF, indirect prompt injection tests)
-* [ ] **Phase 15: Docker & Cloud Deployment**
-* [ ] **Phase 16: Performance & Optimization** (Caching, model routing)
+# Start ARAA development server
+uvicorn app.main:create_app --factory --reload --port 8000
+```
+Open [http://localhost:8000](http://localhost:8000) in your browser.
 
 ---
 
-## 6. Security Principles
+## Docker Production Build
 
-1. **"The Model Proposes, The Policy Engine Disposes":** The LLM never has root or direct OS access.
-2. **Untrusted Data Boundaries:** All web text is marked untrusted to prevent prompt injections from overriding instructions.
-3. **No-Network Sandbox:** Agent-written Python code is executed in an isolated container with `--net=none`.
+Build and run the production image locally using Docker:
+```bash
+# Build multi-stage production image
+docker build -t araa:latest .
+
+# Run container as unprivileged non-root user (port 8000)
+docker run -p 8000:8000 --env-file .env araa:latest
+```
+
+---
+
+## API & Streaming Reference
+
+### Create an Investigation Run
+```http
+POST /api/v1/runs
+Content-Type: application/json
+
+{
+  "task": "Investigate ASML extreme ultraviolet lithography market share in 2026",
+  "role": "researcher"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "run_id": "run_9a8b7c6d5e",
+  "task": "Investigate ASML extreme ultraviolet lithography market share in 2026",
+  "status": "queued",
+  "step_count": 0,
+  "final_report": null,
+  "audit_passed": null
+}
+```
+
+### Stream Live Trajectory Events (Server-Sent Events)
+```http
+GET /api/v1/runs/{run_id}/events
+Accept: text/event-stream
+```
+
+Streams real-time JSON events:
+- `plan_created`: Decomposed sub-task roadmap.
+- `step_started`: Model thought signature and proposed tool call.
+- `tool_executed`: Observation output and provenance metadata.
+- `approval_required`: Pauses execution for HITL confirmation.
+- `report_generated`: Verifier audit score and cited markdown report.
+
+### Submit Human Approval
+```http
+POST /api/v1/approvals/{approval_token}
+Content-Type: application/json
+
+{
+  "approved": true
+}
+```
+
+### Health & Liveness Probe
+```http
+GET /health
+```
+```json
+{
+  "status": "ok"
+}
+```
+
+---
+
+## Repository Structure
+
+```
+ARAA/
+├── app/
+│   ├── agents/          # Planner, Synthesizer, Verifier, Loop Detector, Budget
+│   ├── api/v1/          # REST & SSE Endpoints (/runs, /events, /approvals)
+│   ├── core/            # 12-factor configuration, logging, errors
+│   ├── db/              # SQLAlchemy async session & pgvector models
+│   ├── llm/             # Wire-level LLM clients (Gemini, Groq, Ollama)
+│   ├── sandbox/         # Subprocess resource-bounded code executor
+│   ├── static/          # Single-page Exa-inspired interface, tokens, monogram logo
+│   ├── tools/           # Tool implementations (web_search, calculator, fetch_url)
+│   └── main.py          # FastAPI application factory
+├── tests/               # Unit, integration, and security test suite
+├── Dockerfile           # Multi-stage unprivileged production container
+├── docker-compose.yml   # Postgres (pgvector) & Redis local cluster
+├── requirements.txt     # Locked production dependencies
+├── pyproject.toml       # Hatchling project specifications
+└── README.md            # Documentation
+```
+
+---
+
+## Testing
+
+Run the automated test suite:
+```bash
+# Run unit and API tests
+pytest
+
+# Run tests with coverage
+pytest --cov=app --cov-report=term-missing
+```
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+<div align="center">
+  <sub>Built with precision by <a href="https://github.com/echoistprashant">Prashant Yadav</a>.</sub>
+</div>
