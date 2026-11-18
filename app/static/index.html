@@ -1853,21 +1853,6 @@
             if (r.run_id === currentRunId) opt.selected = true;
             sel.appendChild(opt);
           });
-
-          if (!currentRunId) {
-            const completed = runs.filter(r => r.status === 'completed' && (r.markdown_report || r.final_report));
-            if (completed.length > 0) {
-              const latest = completed[completed.length - 1];
-              currentRunId = latest.run_id;
-              renderRunData(latest);
-              document.getElementById('taskInput').value = latest.task || '';
-              const badge = document.getElementById('runBadge');
-              badge.innerText = 'Completed';
-              badge.className = 'status-tag is-success';
-              addLog('Session Restored', `Loaded latest completed run: "${latest.task}"`, 'info');
-              sel.value = latest.run_id;
-            }
-          }
         }
       } catch (e) {
         console.warn("Could not load history:", e);
