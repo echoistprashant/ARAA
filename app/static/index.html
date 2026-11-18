@@ -123,6 +123,8 @@
   border: var(--rule-hair) solid var(--color-rule);
   background: var(--color-paper-3);
   color: var(--color-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* Telemetry Pills */
@@ -174,6 +176,8 @@
   background: var(--color-paper-3);
   color: var(--color-muted);
   font-size: var(--text-xs);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .theme-dropdown-select {
@@ -188,13 +192,6 @@
 
 .mobile-jump-links {
   display: none;
-  gap: var(--space-xs);
-}
-
-@media (max-width: 48rem) {
-  .mobile-jump-links {
-    display: flex;
-  }
 }
 
 .jump-link {
@@ -202,6 +199,34 @@
   color: var(--color-accent);
   text-decoration: none;
   padding: var(--space-3xs) var(--space-2xs);
+}
+
+@media (max-width: 44rem) {
+  .vital-secondary {
+    display: none;
+  }
+}
+
+@media (max-width: 36rem) {
+  .navbar-inner {
+    padding: var(--space-xs) var(--space-sm);
+    gap: var(--space-xs);
+  }
+  .vital-tag-cost {
+    display: none;
+  }
+  .vitals-row {
+    gap: var(--space-2xs);
+    flex-wrap: nowrap;
+  }
+  .vital-tag, .theme-dropdown-pill {
+    padding: var(--space-3xs) var(--space-2xs);
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  .input-shortcut-cue {
+    display: none;
+  }
 }
 
 /* Centered Hero Header */
@@ -251,6 +276,13 @@
   width: 100%;
   margin: 0 auto var(--space-2xl);
   padding-inline: var(--gutter);
+}
+
+@media (max-width: 36rem) {
+  .playground-container {
+    padding-inline: var(--space-sm);
+    margin-bottom: var(--space-lg);
+  }
 }
 
 .playground-card {
@@ -315,6 +347,32 @@
   flex-wrap: wrap;
   padding-top: var(--space-xs);
   border-top: var(--rule-hair) solid var(--color-paper-well);
+}
+
+@media (max-width: 36rem) {
+  .directive-bar {
+    padding: var(--space-sm);
+  }
+  .directive-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-xs);
+  }
+  .toolbar-left {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .chips-group {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: var(--space-3xs);
+    -webkit-overflow-scrolling: touch;
+  }
+  .toolbar-right {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }
 
 .toolbar-left {
@@ -769,6 +827,29 @@
   flex-wrap: wrap;
 }
 
+@media (max-width: 36rem) {
+  .workspace-toolbar {
+    padding: var(--space-xs) var(--space-sm);
+    gap: var(--space-xs);
+  }
+  .segmented-tab-strip {
+    width: 100%;
+  }
+  .segmented-tab-btn {
+    flex: 1;
+    text-align: center;
+    padding: var(--space-2xs) var(--space-xs);
+  }
+  .workspace-actions-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .history-dropdown-select {
+    flex: 1;
+    max-width: none;
+  }
+}
+
 /* Exa.ai Segmented Tabs Toggle */
 .segmented-tab-strip {
   display: inline-flex;
@@ -989,6 +1070,10 @@
 }
 
 .report-prose table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
@@ -997,7 +1082,6 @@
   font-size: var(--text-xs);
   border: var(--rule-hair) solid var(--color-rule);
   border-radius: 8px;
-  overflow: hidden;
   background: var(--color-paper-2);
 }
 
@@ -1196,15 +1280,15 @@
           <span>Docker cluster</span>
         </div>
 
-        <div class="vital-tag">
+        <div class="vital-tag vital-secondary">
           <span>Gemini 3.5</span>
         </div>
 
-        <div class="vital-tag">
+        <div class="vital-tag vital-secondary">
           <span>Anti-SSRF</span>
         </div>
 
-        <div class="vital-tag">
+        <div class="vital-tag vital-tag-cost">
           <span>$0.00 cost</span>
         </div>
 
