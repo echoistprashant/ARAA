@@ -202,28 +202,106 @@
   padding: var(--space-3xs) var(--space-2xs);
 }
 
-@media (max-width: 44rem) {
-  .vital-secondary {
-    display: none;
-  }
+/* Announcement Top Banner (Exa-style) */
+.announcement-pill-banner {
+  background-color: var(--color-paper-3);
+  border-bottom: var(--rule-hair) solid var(--color-rule);
+  text-align: center;
+  padding: 5px var(--space-xs);
+  font-family: var(--font-outlier);
+  font-size: 11px;
+  color: var(--color-muted);
+  letter-spacing: 0.02em;
 }
 
-@media (max-width: 36rem) {
+.announcement-content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+}
+
+.announcement-badge {
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.announcement-dot {
+  color: var(--color-rule-2);
+}
+
+/* Mobile Hamburger Menu Toggle Button */
+.mobile-nav-toggle-btn {
+  display: none;
+  background: var(--color-paper-3);
+  border: var(--rule-hair) solid var(--color-rule);
+  color: var(--color-ink);
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color var(--dur-short) var(--ease-out), border-color var(--dur-short) var(--ease-out);
+}
+
+.mobile-nav-toggle-btn:hover {
+  background-color: var(--color-paper-well);
+}
+
+.mobile-nav-toggle-btn:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 48rem) {
+  .mobile-nav-toggle-btn {
+    display: inline-flex;
+  }
   .navbar-inner {
     padding: var(--space-xs) var(--space-sm);
-    gap: var(--space-xs);
-  }
-  .vital-tag-cost {
-    display: none;
+    position: relative;
   }
   .vitals-row {
-    gap: var(--space-2xs);
-    flex-wrap: nowrap;
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: var(--space-sm);
+    left: var(--space-sm);
+    background-color: var(--color-paper-2);
+    border: var(--rule-hair) solid var(--color-rule);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    padding: var(--space-sm);
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-xs);
+    z-index: var(--z-sticky-nav);
   }
-  .vital-tag, .theme-dropdown-pill {
-    padding: var(--space-3xs) var(--space-2xs);
-    font-size: 11px;
-    white-space: nowrap;
+  .vitals-row.is-open {
+    display: flex;
+    animation: fadeInDown 0.15s var(--ease-out);
+  }
+  .vitals-row .vital-secondary,
+  .vitals-row .vital-tag-cost {
+    display: inline-flex !important;
+  }
+  .vitals-row .vital-tag,
+  .vitals-row .theme-dropdown-pill {
+    width: 100%;
+    justify-content: space-between;
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--text-xs);
+    border-radius: 6px;
+  }
+  .vitals-row .theme-dropdown-select {
+    width: auto;
   }
   .input-shortcut-cue {
     display: none;
@@ -251,14 +329,6 @@
   white-space: nowrap;
 }
 
-@media (max-width: 36rem) {
-  .hero-headline {
-    font-size: clamp(1.2rem, 5.2vw, 1.75rem);
-    white-space: normal;
-    text-wrap: balance;
-  }
-}
-
 .hero-subtitle {
   font-family: var(--font-body);
   font-size: var(--text-lead);
@@ -267,6 +337,79 @@
   line-height: 1.5;
   margin: 0;
   text-wrap: balance;
+}
+
+.mobile-hero-cta-wrap {
+  display: none;
+}
+
+@media (max-width: 48rem) {
+  .hero-section {
+    padding: var(--space-lg) var(--space-sm) var(--space-sm);
+    text-align: center;
+  }
+  .hero-headline {
+    font-size: clamp(1.75rem, 6.5vw, 2.5rem);
+    white-space: normal;
+    text-wrap: balance;
+    line-height: 1.15;
+  }
+  .hero-subtitle {
+    font-size: var(--text-sm);
+    line-height: 1.5;
+    margin-bottom: var(--space-md);
+  }
+  .mobile-hero-cta-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    width: 100%;
+    max-width: 24rem;
+    margin: 0 auto;
+  }
+  .btn-mobile-primary-cta {
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: 8px;
+    background: var(--color-submit-gradient);
+    color: var(--color-accent-ink);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    box-shadow: var(--shadow-submit-btn);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity var(--dur-short) var(--ease-out);
+  }
+  .btn-mobile-primary-cta:hover {
+    opacity: 0.95;
+  }
+  .btn-mobile-primary-cta:active {
+    transform: translateY(1px);
+  }
+  .mobile-specs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2xs);
+    width: 100%;
+  }
+  .mobile-spec-badge {
+    font-family: var(--font-outlier);
+    font-size: 11px;
+    padding: var(--space-3xs) var(--space-xs);
+    border-radius: var(--radius-pill);
+    border: var(--rule-hair) solid var(--color-rule);
+    background: var(--color-paper-3);
+    color: var(--color-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2xs);
+    white-space: nowrap;
+  }
 }
 
 /* Central Unified Playground Card */
@@ -279,9 +422,9 @@
   padding-inline: var(--gutter);
 }
 
-@media (max-width: 36rem) {
+@media (max-width: 48rem) {
   .playground-container {
-    padding-inline: var(--space-sm);
+    padding-inline: var(--space-xs);
     margin-bottom: var(--space-lg);
   }
 }
@@ -350,29 +493,73 @@
   border-top: var(--rule-hair) solid var(--color-paper-well);
 }
 
-@media (max-width: 36rem) {
+@media (max-width: 48rem) {
   .directive-bar {
     padding: var(--space-sm);
+    gap: var(--space-2xs);
+  }
+  .exa-textarea {
+    font-size: 16px; /* Essential: prevents iOS Safari auto-zoom on focus */
+    min-height: 60px;
+    padding-right: var(--space-xs);
   }
   .directive-toolbar {
-    flex-direction: column;
-    align-items: stretch;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
     gap: var(--space-xs);
+    flex-wrap: nowrap;
+    overflow: hidden;
+    padding-top: var(--space-xs);
   }
   .toolbar-left {
-    width: 100%;
-    justify-content: flex-start;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2xs);
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+  }
+  .toolbar-left::-webkit-scrollbar {
+    display: none;
+  }
+  .role-segmented-box {
+    flex-shrink: 0;
+    padding: 2px 4px;
+  }
+  .role-tag-label {
+    display: none;
   }
   .chips-group {
-    width: 100%;
-    overflow-x: auto;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2xs);
     flex-wrap: nowrap;
-    padding-bottom: var(--space-3xs);
+    flex-shrink: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
     -webkit-overflow-scrolling: touch;
   }
+  .chips-group::-webkit-scrollbar {
+    display: none;
+  }
+  .exa-chip {
+    padding: var(--space-3xs) var(--space-xs);
+    font-size: 11px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
   .toolbar-right {
-    width: 100%;
-    justify-content: flex-end;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2xs);
+    flex-shrink: 0;
   }
 }
 
@@ -565,9 +752,59 @@
   min-height: 480px;
 }
 
-@media (max-width: 64rem) {
+/* Mobile Segmented View Switcher (Output | Trajectory) */
+.mobile-view-switcher {
+  display: none;
+}
+
+@media (max-width: 48rem) {
+  .mobile-view-switcher {
+    display: flex;
+    align-items: center;
+    border-bottom: var(--rule-hair) solid var(--color-rule);
+    background-color: var(--color-paper-well);
+    padding: var(--space-3xs) var(--space-xs);
+    gap: var(--space-3xs);
+  }
+  .mobile-view-tab {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2xs);
+    padding: var(--space-2xs) var(--space-sm);
+    border: none;
+    background: transparent;
+    font-family: var(--font-display);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    color: var(--color-muted);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color var(--dur-short) var(--ease-out), color var(--dur-short) var(--ease-out);
+  }
+  .mobile-view-tab.is-active {
+    background-color: var(--color-paper-2);
+    color: var(--color-tab-active);
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+  }
+  .mobile-step-badge {
+    font-family: var(--font-outlier);
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 9999px;
+    background-color: var(--color-accent-soft);
+    color: var(--color-accent);
+    font-weight: 600;
+  }
   .card-split-workspace {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    min-height: auto;
+  }
+  .mobile-pane-hidden {
+    display: none !important;
   }
 }
 
@@ -579,10 +816,11 @@
   flex-direction: column;
 }
 
-@media (max-width: 64rem) {
+@media (max-width: 48rem) {
   .trajectory-column {
     border-right: none;
-    border-bottom: var(--rule-hair) solid var(--color-rule);
+    border-bottom: none;
+    width: 100%;
   }
 }
 
@@ -828,26 +1066,68 @@
   flex-wrap: wrap;
 }
 
-@media (max-width: 36rem) {
+.output-cost-pill {
+  display: none;
+}
+
+@media (max-width: 48rem) {
   .workspace-toolbar {
     padding: var(--space-xs) var(--space-sm);
     gap: var(--space-xs);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
   }
   .segmented-tab-strip {
-    width: 100%;
+    flex: 1;
+    min-width: 0;
   }
   .segmented-tab-btn {
     flex: 1;
     text-align: center;
     padding: var(--space-2xs) var(--space-xs);
+    font-size: 11px;
+  }
+  .output-cost-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-outlier);
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: var(--radius-pill);
+    border: var(--rule-hair) solid var(--color-rule);
+    background: var(--color-paper-well);
+    color: var(--color-muted);
+    flex-shrink: 0;
   }
   .workspace-actions-group {
     width: 100%;
+    order: 10;
+    border-top: var(--rule-hair) solid var(--color-rule);
+    padding-top: var(--space-xs);
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
     justify-content: space-between;
+    gap: var(--space-xs);
   }
   .history-dropdown-select {
     flex: 1;
     max-width: none;
+    font-size: 11px;
+  }
+  .report-prose pre,
+  .report-prose code,
+  .raw-code-inspector {
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+  }
+  .evidence-anchor {
+    white-space: normal !important;
+    word-break: break-all !important;
   }
 }
 
@@ -1249,6 +1529,15 @@
 </head>
 <body class="app-shell">
 
+  <!-- Exa-style Mobile Top Announcement Banner -->
+  <div class="announcement-pill-banner">
+    <div class="announcement-content">
+      <span class="announcement-badge">ARAA v1.0 Pro</span>
+      <span class="announcement-dot">·</span>
+      <span>Autonomous Research &amp; Analysis Agent Powered by Gemini 3.5</span>
+    </div>
+  </div>
+
   <!-- Desktop Subtle Outer Grid Pattern (Exa-style) -->
   <div class="desktop-grid-accents" aria-hidden="true"></div>
 
@@ -1272,6 +1561,15 @@
           <a href="#reportPanel" class="jump-link">Report</a>
         </div>
       </div>
+
+      <!-- Mobile Hamburger Toggle Button -->
+      <button id="mobileNavToggle" type="button" class="mobile-nav-toggle-btn" onclick="toggleMobileNav()" aria-label="Toggle telemetry menu" aria-expanded="false">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
 
       <!-- Right Header Actions: Vitals & Theme Picker -->
       <div class="vitals-row">
@@ -1311,6 +1609,18 @@
   <section class="hero-section">
     <h1 class="hero-headline">Autonomous Research & Analysis Agent</h1>
     <p class="hero-subtitle">Deep web investigation, evidence synthesis, and verifiable agent trajectories.</p>
+    <div class="mobile-hero-cta-wrap">
+      <a href="#taskInput" class="btn-mobile-primary-cta">Go to Agent &rarr;</a>
+      <div class="mobile-specs-grid">
+        <div class="mobile-spec-badge">
+          <span class="vital-dot-green"></span>
+          <span>Docker cluster</span>
+        </div>
+        <div class="mobile-spec-badge">Gemini 3.5</div>
+        <div class="mobile-spec-badge">Anti-SSRF Guard</div>
+        <div class="mobile-spec-badge">$0.00 / query</div>
+      </div>
+    </div>
   </section>
 
   <!-- Central Interactive Playground Card (Unified Container) -->
@@ -1393,6 +1703,17 @@
       <!-- Horizontal Divider -->
       <div class="card-divider"></div>
 
+      <!-- Mobile Segmented View Switcher (Output | Trajectory) -->
+      <div class="mobile-view-switcher">
+        <button id="mobileViewOutput" type="button" class="mobile-view-tab is-active" onclick="setMobileView('output')">
+          <span>Output</span>
+        </button>
+        <button id="mobileViewTrajectory" type="button" class="mobile-view-tab" onclick="setMobileView('trajectory')">
+          <span>Trajectory</span>
+          <span id="mobileStepBadge" class="mobile-step-badge">0</span>
+        </button>
+      </div>
+
       <!-- LOWER SECTION: Split Workspace Inside Card (35% Left / 65% Right) -->
       <div class="card-split-workspace">
 
@@ -1455,6 +1776,11 @@
               <button onclick="switchTab('raw')" id="tabBtnRaw" class="segmented-tab-btn">
                 <span>Audit JSON</span>
               </button>
+            </div>
+
+            <!-- Mobile Compact Status Pill -->
+            <div class="output-cost-pill">
+              <span>$0.00 cost</span>
             </div>
 
             <!-- Workspace Actions Group -->
@@ -1564,6 +1890,68 @@
     const savedTheme = localStorage.getItem('araa-exa-theme') || 'exa';
     changeTheme(savedTheme);
 
+    // Mobile Navigation Drawer Toggle (Hamburger Menu)
+    function toggleMobileNav() {
+      const vitals = document.querySelector('.vitals-row');
+      const toggle = document.getElementById('mobileNavToggle');
+      if (!vitals) return;
+      const isOpen = vitals.classList.toggle('is-open');
+      if (toggle) toggle.setAttribute('aria-expanded', String(isOpen));
+    }
+
+    // Close Mobile Drawer when clicking outside
+    document.addEventListener('click', function(e) {
+      const vitals = document.querySelector('.vitals-row');
+      const toggle = document.getElementById('mobileNavToggle');
+      if (!vitals || !toggle) return;
+      if (!vitals.contains(e.target) && !toggle.contains(e.target) && vitals.classList.contains('is-open')) {
+        vitals.classList.remove('is-open');
+        toggle.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    // Mobile View Switcher (Output | Trajectory)
+    let currentMobileView = 'output';
+    let trajectoryStepCount = 0;
+
+    function setMobileView(view) {
+      currentMobileView = view;
+      const outTab = document.getElementById('mobileViewOutput');
+      const trajTab = document.getElementById('mobileViewTrajectory');
+      const outPane = document.getElementById('reportPanel');
+      const trajPane = document.getElementById('directivePanel');
+
+      if (window.innerWidth <= 768) {
+        if (view === 'trajectory') {
+          if (outPane) outPane.classList.add('mobile-pane-hidden');
+          if (trajPane) trajPane.classList.remove('mobile-pane-hidden');
+          if (trajTab) trajTab.classList.add('is-active');
+          if (outTab) outTab.classList.remove('is-active');
+        } else {
+          if (trajPane) trajPane.classList.add('mobile-pane-hidden');
+          if (outPane) outPane.classList.remove('mobile-pane-hidden');
+          if (outTab) outTab.classList.add('is-active');
+          if (trajTab) trajTab.classList.remove('is-active');
+        }
+      } else {
+        if (outPane) outPane.classList.remove('mobile-pane-hidden');
+        if (trajPane) trajPane.classList.remove('mobile-pane-hidden');
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      setMobileView(currentMobileView);
+    });
+
+    // Auto-growing textarea for #taskInput (Exa-style)
+    const taskInputEl = document.getElementById('taskInput');
+    if (taskInputEl) {
+      taskInputEl.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 220) + 'px';
+      });
+    }
+
     // Keyboard Shortcut (Ctrl+Enter / Cmd+Enter to launch)
     document.getElementById('taskInput').addEventListener('keydown', function(e) {
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
@@ -1573,16 +1961,24 @@
     });
 
     function setQuery(text) {
-      document.getElementById('taskInput').value = text;
-      document.getElementById('taskInput').focus();
+      const input = document.getElementById('taskInput');
+      input.value = text;
+      input.style.height = 'auto';
+      input.style.height = Math.min(input.scrollHeight, 220) + 'px';
+      input.focus();
     }
 
     function clearQuery() {
-      document.getElementById('taskInput').value = '';
-      document.getElementById('taskInput').focus();
+      const input = document.getElementById('taskInput');
+      input.value = '';
+      input.style.height = 'auto';
+      input.focus();
     }
 
     function clearTerminal() {
+      trajectoryStepCount = 0;
+      const stepBadge = document.getElementById('mobileStepBadge');
+      if (stepBadge) stepBadge.innerText = '0';
       document.getElementById('terminalFeed').innerHTML = `
         <div class="timeline-empty-message"><span>Terminal cleared.</span></div>
       `;
@@ -1608,6 +2004,10 @@
       if (feed.querySelector('.timeline-empty-message')) {
         feed.innerHTML = '';
       }
+
+      trajectoryStepCount++;
+      const stepBadge = document.getElementById('mobileStepBadge');
+      if (stepBadge) stepBadge.innerText = String(trajectoryStepCount);
 
       const item = document.createElement('div');
       item.className = `timeline-row entry-${type}`;
@@ -1644,6 +2044,9 @@
       badge.className = 'status-tag is-running';
 
       switchTab('report');
+      if (window.innerWidth <= 768) {
+        setMobileView('trajectory');
+      }
       document.getElementById('reportContainer').innerHTML = `
         <div class="placeholder-empty-state">
           <p>Autonomous investigation in progress...</p>
@@ -1778,6 +2181,9 @@
       }
 
       renderRunData(data);
+      if (window.innerWidth <= 768) {
+        setMobileView('output');
+      }
       await loadRunHistory();
     }
 
@@ -1885,7 +2291,12 @@
       });
     }
 
-    window.addEventListener('DOMContentLoaded', loadRunHistory);
+    window.addEventListener('DOMContentLoaded', () => {
+      loadRunHistory();
+      if (window.innerWidth <= 768) {
+        setMobileView('output');
+      }
+    });
   </script>
 </body>
 </html>
