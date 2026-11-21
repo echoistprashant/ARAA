@@ -1,7 +1,7 @@
 import asyncio
 import uuid
 from typing import Any
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from app.agents.exporter import ReportExporter
@@ -26,6 +26,7 @@ active_runs: dict[str, dict[str, Any]] = {}
 class CreateRunRequest(BaseModel):
     task: str = Field(..., description="The research or analytical goal for the agent.")
     user_role: str = Field(default="researcher", description="User permission role (viewer, researcher, operator, admin).")
+    session_id: str | None = Field(default=None, description="Client session identifier for isolated history.")
 
 
 class RunSummaryResponse(BaseModel):
@@ -39,7 +40,7 @@ class RunSummaryResponse(BaseModel):
     grounding_score: float | None = None
 
 
-async def _execute_agent_run(run_id: str, task: str, user_role: str) -> None:
+async def _execute_agent_run(run_id: str, task: str, user_role: str, session_id: str = "default_session") -> None:
     """Background worker driving the agent run and publishing real-time events."""
     try:
         # 1. Setup LLM provider
@@ -63,7 +64,7 @@ async def _execute_agent_run(run_id: str, task: str, user_role: str) -> None:
             event_listener=broadcast_event,
         )
 
-        state = RunState(run_id=run_id, task=task, user_role=user_role)
+        state = RunState(run_id=run_id, task=task, user_role=user_role, tenant_id=session_id)
         active_runs[run_id]["status"] = "running"
         await broadcast_event("run_started", {"run_id": run_id, "task": task})
 
@@ -114,12 +115,18 @@ async def _execute_agent_run(run_id: str, task: str, user_role: str) -> None:
 
 
 @router.post("", response_model=RunSummaryResponse)
-async def create_and_start_run(payload: CreateRunRequest, background_tasks: BackgroundTasks):
-    """Creates and starts an autonomous research run in the background."""
+async def create_and_start_run(
+    payload: CreateRunRequest,
+    background_tasks: BackgroundTasks,
+    x_session_id: str | None = Header(None, alias="X-Session-ID"),
+):
+    """Creates and starts an autonomous research run in the background with session isolation."""
     run_id = f"run_{uuid.uuid4().hex[:10]}"
+    session_id = payload.session_id or x_session_id or f"sess_{uuid.uuid4().hex[:8]}"
 
     active_runs[run_id] = {
         "run_id": run_id,
+        "session_id": session_id,
         "task": payload.task,
         "status": "queued",
         "step_count": 0,
@@ -130,7 +137,7 @@ async def create_and_start_run(payload: CreateRunRequest, background_tasks: Back
         "evidence": [],
     }
 
-    background_tasks.add_task(_execute_agent_run, run_id, payload.task, payload.user_role)
+    background_tasks.add_task(_execute_agent_run, run_id, payload.task, payload.user_role, session_id)
 
     return RunSummaryResponse(
         run_id=run_id,
@@ -141,15 +148,54 @@ async def create_and_start_run(payload: CreateRunRequest, background_tasks: Back
 
 
 @router.get("/{run_id}", response_model=dict[str, Any])
-async def get_run_status(run_id: str):
+async def get_run_status(
+    run_id: str,
+    session_id: str | None = Query(None),
+    x_session_id: str | None = Header(None, alias="X-Session-ID"),
+):
     """Retrieves current status, evidence items, and generated reports for a run."""
     run = active_runs.get(run_id)
     if not run:
         raise HTTPException(status_code=404, detail="Run not found.")
+
+    active_session = session_id or x_session_id
+    if run.get("session_id") and active_session and run.get("session_id") != active_session:
+        raise HTTPException(status_code=404, detail="Run not found.")
+
     return run
 
 
 @router.get("", response_model=list[dict[str, Any]])
-async def list_recent_runs():
-    """Returns list of recent runs."""
-    return list(active_runs.values())
+async def list_recent_runs(
+    session_id: str | None = Query(None, description="Client session ID to filter history."),
+    x_session_id: str | None = Header(None, alias="X-Session-ID"),
+):
+    """Returns list of recent runs isolated strictly to the calling session."""
+    active_session = session_id or x_session_id
+    if not active_session:
+        return []
+
+    return [
+        run for run in active_runs.values()
+        if run.get("session_id") == active_session
+    ]
+
+
+@router.delete("", response_model=dict[str, Any])
+async def clear_session_runs(
+    session_id: str | None = Query(None),
+    x_session_id: str | None = Header(None, alias="X-Session-ID"),
+):
+    """Clears all runs for the calling session."""
+    active_session = session_id or x_session_id
+    if not active_session:
+        return {"cleared": 0}
+
+    to_delete = [
+        k for k, v in active_runs.items()
+        if v.get("session_id") == active_session
+    ]
+    for k in to_delete:
+        active_runs.pop(k, None)
+
+    return {"cleared": len(to_delete)}

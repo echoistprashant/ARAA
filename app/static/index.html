@@ -1634,6 +1634,8 @@
         <div class="directive-input-area">
           <textarea id="taskInput" rows="2" 
             class="exa-textarea" 
+            autocomplete="off"
+            spellcheck="false"
             placeholder="What would you like ARAA to investigate autonomously?"></textarea>
           
           <div class="input-shortcut-cue">
@@ -1787,7 +1789,7 @@
             <div class="workspace-actions-group">
               
               <!-- Past Runs Dropdown -->
-              <select id="runHistorySelect" onchange="selectPastRun(this.value)" class="history-dropdown-select">
+              <select id="runHistorySelect" onchange="selectPastRun(this.value)" autocomplete="off" class="history-dropdown-select">
                 <option value="">Past runs</option>
               </select>
 
@@ -1858,6 +1860,16 @@
     let activeApprovalId = null;
     let eventSource = null;
     let currentRawReport = '';
+
+    // Isolated client session ID per browser window/tab (stored in sessionStorage)
+    function getSessionId() {
+      let sid = sessionStorage.getItem('araa_session_id');
+      if (!sid) {
+        sid = 'sess_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+        sessionStorage.setItem('araa_session_id', sid);
+      }
+      return sid;
+    }
 
     const SUBMIT_IDLE_HTML = `
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -2055,10 +2067,14 @@
       `;
 
       try {
+        const sid = getSessionId();
         const res = await fetch('/api/v1/runs', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ task, user_role: role })
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-Session-ID': sid
+          },
+          body: JSON.stringify({ task, user_role: role, session_id: sid })
         });
         const data = await res.json();
         currentRunId = data.run_id;
@@ -2244,7 +2260,10 @@
 
     async function loadRunHistory() {
       try {
-        const res = await fetch('/api/v1/runs');
+        const sid = getSessionId();
+        const res = await fetch(`/api/v1/runs?session_id=${encodeURIComponent(sid)}`, {
+          headers: { 'X-Session-ID': sid }
+        });
         if (!res.ok) return;
         const runs = await res.json();
         const sel = document.getElementById('runHistorySelect');
@@ -2259,6 +2278,11 @@
             if (r.run_id === currentRunId) opt.selected = true;
             sel.appendChild(opt);
           });
+
+          const clearOpt = document.createElement('option');
+          clearOpt.value = '__clear_history__';
+          clearOpt.text = '🗑 Clear session history';
+          sel.appendChild(clearOpt);
         }
       } catch (e) {
         console.warn("Could not load history:", e);
@@ -2267,18 +2291,46 @@
 
     async function selectPastRun(runId) {
       if (!runId) return;
+      if (runId === '__clear_history__') {
+        await clearSessionHistory();
+        return;
+      }
       currentRunId = runId;
+      const sid = getSessionId();
       try {
-        const res = await fetch(`/api/v1/runs/${runId}`);
+        const res = await fetch(`/api/v1/runs/${runId}?session_id=${encodeURIComponent(sid)}`, {
+          headers: { 'X-Session-ID': sid }
+        });
+        if (!res.ok) return;
         const data = await res.json();
         renderRunData(data);
-        if (data.task) document.getElementById('taskInput').value = data.task;
+        if (data.task) {
+          const input = document.getElementById('taskInput');
+          input.value = data.task;
+          input.style.height = 'auto';
+          input.style.height = Math.min(input.scrollHeight, 220) + 'px';
+        }
         const badge = document.getElementById('runBadge');
         badge.innerText = data.status === 'completed' ? 'Completed' : 'Failed';
         badge.className = data.status === 'completed' ? 'status-tag is-success' : 'status-tag is-error';
       } catch (e) {
         console.error("Failed to load run:", e);
       }
+    }
+
+    async function clearSessionHistory() {
+      const sid = getSessionId();
+      try {
+        await fetch(`/api/v1/runs?session_id=${encodeURIComponent(sid)}`, {
+          method: 'DELETE',
+          headers: { 'X-Session-ID': sid }
+        });
+      } catch (e) {
+        console.warn("Could not clear session history:", e);
+      }
+      currentRunId = null;
+      const sel = document.getElementById('runHistorySelect');
+      if (sel) sel.innerHTML = '<option value="">Past runs</option>';
     }
 
     function copyReport() {
@@ -2292,6 +2344,21 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      // Ensure completely fresh initial state on page load / refresh
+      const taskInput = document.getElementById('taskInput');
+      if (taskInput) {
+        taskInput.value = '';
+        taskInput.style.height = 'auto';
+      }
+      const historySel = document.getElementById('runHistorySelect');
+      if (historySel) {
+        historySel.selectedIndex = 0;
+      }
+      const runBadge = document.getElementById('runBadge');
+      if (runBadge) {
+        runBadge.innerText = 'Idle';
+        runBadge.className = 'status-tag';
+      }
       loadRunHistory();
       if (window.innerWidth <= 768) {
         setMobileView('output');
