@@ -45,6 +45,7 @@ def test_report_exporter_to_markdown():
     md = ReportExporter.to_markdown(report, verification, evidence)
 
     assert "# Lithography Market Report" in md
+    assert "[!NOTE]" not in md
     assert "Audit Status:** UNVERIFIED" in md
     assert "Grounding Score:** 50%" in md
     assert "ASML High-NA systems cost 350M USD. [1]" in md

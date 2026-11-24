@@ -35,7 +35,6 @@ class ReportExporter:
                 lines.extend([
                     "---",
                     "## Empirical Verification & Grounding Audit",
-                    "> [!NOTE]",
                     f"> **Audit Status:** {status_badge} | **Grounding Score:** {verification.grounding_score:.0%}",
                 ])
                 if verification.warnings:
@@ -54,7 +53,6 @@ class ReportExporter:
             if verification:
                 status_badge = "VERIFIED" if verification.passed else "UNVERIFIED"
                 lines.extend([
-                    "> [!NOTE]",
                     f"> **Audit Status:** {status_badge} | **Grounding Score:** {verification.grounding_score:.0%}",
                 ])
                 if verification.warnings:

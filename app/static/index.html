@@ -2210,7 +2210,8 @@
       currentRawReport = content || '';
       
       if (content) {
-        document.getElementById('reportContainer').innerHTML = marked.parse(content);
+        const cleanedContent = content.replace(/^(>\s*)\[!(?:NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*(?:\r?\n)?/gim, (m, prefix) => (m.endsWith('\n') ? '' : prefix));
+        document.getElementById('reportContainer').innerHTML = marked.parse(cleanedContent);
       } else if (data.error) {
         document.getElementById('reportContainer').innerHTML = `
           <div class="error-alert-box">
