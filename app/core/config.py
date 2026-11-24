@@ -32,9 +32,9 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str | None = None
 
     # Model identifiers
-    PLANNER_MODEL: str = "gemini-3.5-flash-lite"
-    ACTOR_MODEL: str = "gemini-3.5-flash-lite"
-    VERIFIER_MODEL: str = "gemini-3.5-flash-lite"
+    PLANNER_MODEL: str = "gemini-flash-lite-latest"
+    ACTOR_MODEL: str = "gemini-flash-lite-latest"
+    VERIFIER_MODEL: str = "gemini-flash-lite-latest"
 
     # Search Provider
     SEARCH_PROVIDER: Literal["duckduckgo", "tavily", "brave"] = "duckduckgo"

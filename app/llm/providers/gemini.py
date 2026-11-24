@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import time
 from typing import Any
@@ -16,12 +17,17 @@ from app.llm.client import (
 
 logger = logging.getLogger(__name__)
 
-# Models to try in order when the primary is overloaded/busy.
-# Index 0 is the primary (set via config); fallbacks follow in order.
-FALLBACK_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash"]
+# Models to try in order when the primary is overloaded/busy or unavailable.
+FALLBACK_MODELS = [
+    "gemini-flash-lite-latest",
+    "gemini-3.5-flash-lite",
+    "gemini-flash-latest",
+    "gemini-3.8-flash",
+    "gemini-3.1-flash-lite",
+]
 
-# HTTP status codes that indicate the model is busy and a fallback is worthwhile.
-_OVERLOAD_STATUSES = {429, 503}
+# HTTP status codes that indicate the model is unavailable or busy, warranting a fallback.
+_FALLBACK_STATUSES = {404, 429, 500, 502, 503, 504}
 
 
 class GeminiProvider:
@@ -110,13 +116,17 @@ class GeminiProvider:
         model: str,
         payload: dict[str, Any],
         start_time: float,
-    ) -> tuple[httpx.Response, int]:
+    ) -> tuple[httpx.Response | None, int, Exception | None]:
         """Makes a single HTTP call to a specific Gemini model."""
         url = f"{self.BASE_URL}/{model}:generateContent?key={self.api_key}"
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            resp = await client.post(url, json=payload)
-        latency_ms = int((time.perf_counter() - start_time) * 1000)
-        return resp, latency_ms
+        try:
+            async with httpx.AsyncClient(timeout=45.0) as client:
+                resp = await client.post(url, json=payload)
+            latency_ms = int((time.perf_counter() - start_time) * 1000)
+            return resp, latency_ms, None
+        except Exception as exc:
+            latency_ms = int((time.perf_counter() - start_time) * 1000)
+            return None, latency_ms, exc
 
     async def generate(
         self,
@@ -128,7 +138,7 @@ class GeminiProvider:
         """Invokes Gemini generateContent endpoint with native function calling.
 
         Automatically falls back to FALLBACK_MODELS in order if the primary
-        model returns 429 (rate-limited) or 503 (overloaded/busy).
+        model returns 429 (rate-limited), 503 (overloaded), times out, or encounters errors.
         """
         if not self.api_key:
             raise ToolExecutionError(
@@ -160,14 +170,28 @@ class GeminiProvider:
         ]
 
         last_resp: httpx.Response | None = None
+        last_error_msg: str = "Unknown error"
         last_latency_ms: int = 0
         active_model: str = self.model
 
         for attempt, model in enumerate(models_to_try):
             start_time = time.perf_counter()
-            resp, latency_ms = await self._call_model(model, payload, start_time)
+            resp, latency_ms, exc = await self._call_model(model, payload, start_time)
 
-            if resp.status_code == 200:
+            if exc is not None:
+                last_error_msg = f"Network/timeout error for model '{model}': {exc}"
+                if attempt < len(models_to_try) - 1:
+                    logger.warning(
+                        "Gemini model '%s' failed with error (%s). Waiting 1.5s then trying fallback model '%s'…",
+                        model,
+                        exc,
+                        models_to_try[attempt + 1],
+                    )
+                    await asyncio.sleep(1.5)
+                    continue
+                raise ToolExecutionError(last_error_msg, retryable=True)
+
+            if resp is not None and resp.status_code == 200:
                 active_model = model
                 last_latency_ms = latency_ms
                 if attempt > 0:
@@ -179,28 +203,33 @@ class GeminiProvider:
                     )
                 break  # success — exit fallback loop
 
-            if resp.status_code in _OVERLOAD_STATUSES and attempt < len(models_to_try) - 1:
+            status_code = resp.status_code if resp is not None else 0
+            err_text = resp.text if resp is not None else ""
+            last_resp = resp
+            last_latency_ms = latency_ms
+            last_error_msg = f"HTTP {status_code} for model '{model}': {err_text[:200]}"
+
+            if status_code in _FALLBACK_STATUSES and attempt < len(models_to_try) - 1:
+                backoff_s = 1.5 if status_code == 503 else 0.5
                 logger.warning(
-                    "Gemini model '%s' returned HTTP %d (busy/overloaded). "
-                    "Automatically retrying with fallback model '%s'…",
+                    "Gemini model '%s' returned HTTP %d. Waiting %.1fs then retrying with fallback model '%s'…",
                     model,
-                    resp.status_code,
+                    status_code,
+                    backoff_s,
                     models_to_try[attempt + 1],
                 )
-                last_resp = resp
-                last_latency_ms = latency_ms
+                await asyncio.sleep(backoff_s)
                 continue  # try next model
 
-            # Non-overload error or exhausted fallbacks — raise.
+            # Non-fallback error or exhausted fallbacks — raise.
             raise ToolExecutionError(
-                f"Gemini API returned HTTP {resp.status_code} for model '{model}': {resp.text}",
-                retryable=(resp.status_code in [429, 500, 503]),
+                f"Gemini API returned HTTP {status_code} for model '{model}': {err_text}",
+                retryable=(status_code in [429, 500, 502, 503, 504]),
             )
         else:
             # All models exhausted — raise with last response info.
             raise ToolExecutionError(
-                f"All Gemini models are currently busy or unavailable. "
-                f"Last error: HTTP {last_resp.status_code if last_resp else 'unknown'}.",
+                f"All Gemini models are currently busy or unavailable. Last error: {last_error_msg}",
                 retryable=True,
             )
 
