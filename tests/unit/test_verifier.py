@@ -1,3 +1,4 @@
+import pytest
 from app.agents.state import EvidenceItem
 from app.agents.synthesizer import ReportClaim, StructuredReport
 from app.agents.verifier import Verifier
@@ -316,3 +317,94 @@ def test_verifier_historical_chevron_claim_passes():
     assert result.temporal_conflicts_count == 0
     assert len(result.unsupported_claims) == 0
     assert result.claim_details[0].temporal_validity == "valid"
+
+
+@pytest.mark.xfail(strict=True, reason="Reproduces Q2 historical-claim temporal violation false positive")
+def test_verifier_q2_historical_mixed_evidence_regression():
+    """Regression test mirroring live Q2 (1990 judicial deference) with mixed 1984-era
+    and post-2024 overruling evidence. Historical claims in a 1990-framed report must not
+    trigger a false-positive temporal violation.
+    """
+    verifier = Verifier()
+    evidence = [
+        EvidenceItem(
+            id="ev_1_0_web_search",
+            tool_name="web_search",
+            title="Chevron v. Natural Resources Defense Council - Ballotpedia",
+            source_url="https://ballotpedia.org/Chevron_v._Natural_Resources_Defense_Council",
+            excerpt=(
+                "Supreme Court of the United States Chevron U.S.A. v. Natural Resources Defense Council "
+                "is a case that was decided on June 25, 1984, by the United States Supreme Court. "
+                "These principles are known as Chevron deference: if a statute is ambiguous, federal "
+                "courts had to defer to the agency's reasonable construction."
+            ),
+            trust_level="untrusted",
+        ),
+        EvidenceItem(
+            id="ev_1_1_web_search",
+            tool_name="web_search",
+            title="The Supreme Court Ends Chevron Deference—What Now?",
+            source_url="https://www.nrdc.org/stories/what-happens-if-supreme-court-ends-chevron-deference",
+            excerpt="Established in 1984 by Chevron v. NRDC. The case that overruled Chevron deference.",
+            trust_level="untrusted",
+        ),
+        EvidenceItem(
+            id="ev_1_2_web_search",
+            tool_name="web_search",
+            title="Supreme Court overturns Chevron decision: What to know",
+            source_url="https://finance.yahoo.com/video/supreme-court-overturns-chevron-decision-205356621.html",
+            excerpt=(
+                "The United States Supreme Court upended a 40-year-old decision from the Chevron v. "
+                "Natural Resources Defense Council case. Now that power is reverted back into the courts."
+            ),
+            trust_level="untrusted",
+        ),
+        EvidenceItem(
+            id="ev_1_3_web_search",
+            tool_name="web_search",
+            title="Chevron U.S.A., Inc. v. NRDC, 467 U.S. 837 (1984)",
+            source_url="https://supreme.justia.com/cases/federal/us/467/837",
+            excerpt=(
+                "A government agency must conform to any clear legislative statements, but courts will "
+                "give the agency deference in ambiguous situations as long as its interpretation is reasonable."
+            ),
+            trust_level="untrusted",
+        ),
+        EvidenceItem(
+            id="ev_1_4_web_search",
+            tool_name="web_search",
+            title="In the Wake of the Chevron Decision",
+            source_url="https://environment.yale.edu/news/article/wake-chevron-decision",
+            excerpt=(
+                "In the 6-3 ruling issued in Loper Bright Enterprises v. Raimondo (2024), the justices "
+                "overruled their landmark 1984 decision in Chevron v. Natural Resources Defense Council."
+            ),
+            trust_level="untrusted",
+        ),
+    ]
+
+    report = StructuredReport(
+        title="The Rule on Judicial Deference in 1990",
+        executive_summary="By 1990, the governing legal standard for judicial deference was Chevron deference.",
+        claims=[
+            ReportClaim(
+                text="In 1990 the governing rule was Chevron deference, established by Chevron v. NRDC, 467 U.S. 837, decided June 25, 1984.",
+                evidence_ids=["ev_1_0_web_search"],
+            ),
+            ReportClaim(
+                text="In 1990, these principles were known as Chevron deference, decided June 25, 1984.",
+                evidence_ids=["ev_1_0_web_search"],
+            ),
+            ReportClaim(
+                text="Under this two-step framework, courts gave the agency deference in ambiguous situations if its interpretation was reasonable.",
+                evidence_ids=["ev_1_3_web_search"],
+            ),
+        ],
+        conclusion="Chevron deference governed federal courts in 1990.",
+    )
+
+    result = verifier.verify(report, evidence)
+    assert result.passed is True
+    assert result.grounding_score == 1.0
+    assert result.temporal_conflicts_count == 0
+    assert not any("Temporal violation" in w for w in result.warnings)
