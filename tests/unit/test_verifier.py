@@ -319,7 +319,6 @@ def test_verifier_historical_chevron_claim_passes():
     assert result.claim_details[0].temporal_validity == "valid"
 
 
-@pytest.mark.xfail(strict=True, reason="Reproduces Q2 historical-claim temporal violation false positive")
 def test_verifier_q2_historical_mixed_evidence_regression():
     """Regression test mirroring live Q2 (1990 judicial deference) with mixed 1984-era
     and post-2024 overruling evidence. Historical claims in a 1990-framed report must not

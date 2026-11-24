@@ -20,8 +20,11 @@ REVERSAL_KEYWORDS = {
 # Tokens indicating current / present validity assertion
 CURRENT_TERMS = {
     "today", "now", "currently", "current", "presently", "at present",
-    "present-day", "in effect", "effective today", "active rule", "active policy",
+    "present-day", "currently in effect", "still in effect", "remains in effect",
+    "in effect today", "effective today", "active rule", "active policy",
     "as of today", "applies today", "applies now", "as of now",
+    "still applies", "still governs", "remains good law", "remains the law",
+    "continues to govern",
 }
 
 # Tokens indicating historical context assertion
@@ -46,6 +49,17 @@ REVERSAL_CLAIM_TERMS = {
 }
 
 YEAR_PATTERN = re.compile(r"\b(19\d{2}|20\d{2})\b")
+
+
+def _compile_terms_pattern(terms: set[str]) -> re.Pattern[str]:
+    ordered = sorted(terms, key=len, reverse=True)
+    return re.compile(r"\b(?:" + "|".join(re.escape(t) for t in ordered) + r")\b")
+
+
+_CURRENT_TERMS_PATTERN = _compile_terms_pattern(CURRENT_TERMS)
+_HISTORICAL_TERMS_PATTERN = _compile_terms_pattern(HISTORICAL_TERMS)
+_REVERSAL_KEYWORDS_PATTERN = _compile_terms_pattern(REVERSAL_KEYWORDS)
+_REVERSAL_CLAIM_PATTERN = _compile_terms_pattern(REVERSAL_CLAIM_TERMS)
 
 
 class ClaimVerificationStatus(BaseModel):
@@ -94,7 +108,7 @@ class Verifier:
         reversal_items = []
         for ev in evidence:
             full_text = f"{getattr(ev, 'title', '') or ''} {ev.excerpt}".lower()
-            if any(kw in full_text for kw in REVERSAL_KEYWORDS):
+            if _REVERSAL_KEYWORDS_PATTERN.search(full_text):
                 reversal_items.append((ev, full_text))
 
         for rev_ev, rev_text in reversal_items:
@@ -112,7 +126,7 @@ class Verifier:
 
                 # Check if other_ev itself discusses the reversal in a contemporary or newer year;
                 # an evidence document reporting the reversal is NOT an obsolete/superseded document!
-                other_has_reversal = any(kw in other_text for kw in REVERSAL_KEYWORDS)
+                other_has_reversal = bool(_REVERSAL_KEYWORDS_PATTERN.search(other_text))
                 if other_has_reversal and max_other_year >= max_rev_year:
                     continue
 
@@ -150,6 +164,11 @@ class Verifier:
 
         # Build supersession/temporal precedence graph
         superseded_map = self._build_supersession_graph(evidence)
+
+        report_header_text = f"{report.title} {report.executive_summary}".lower()
+        report_header_years = self._extract_years(report_header_text)
+        report_header_has_current = bool(_CURRENT_TERMS_PATTERN.search(report_header_text))
+        report_header_has_historical = bool(_HISTORICAL_TERMS_PATTERN.search(report_header_text))
 
         grounded_count = 0
         temporal_conflicts_count = 0
@@ -208,9 +227,9 @@ class Verifier:
 
             # 4. TEMPORAL ACCURACY & VERSION AUDIT (CJ's Challenge)
             claim_years = self._extract_years(claim.text)
-            has_current_marker = any(term in claim_text_lower for term in CURRENT_TERMS)
-            has_historical_marker = any(term in claim_text_lower for term in HISTORICAL_TERMS) or bool(claim_years)
-            is_stating_reversal = any(term in claim_text_lower for term in REVERSAL_CLAIM_TERMS)
+            has_current_marker = bool(_CURRENT_TERMS_PATTERN.search(claim_text_lower))
+            has_historical_marker = bool(_HISTORICAL_TERMS_PATTERN.search(claim_text_lower)) or bool(claim_years)
+            is_stating_reversal = bool(_REVERSAL_CLAIM_PATTERN.search(claim_text_lower))
 
             # Check if any cited evidence is superseded
             superseded_citation = None
@@ -222,15 +241,54 @@ class Verifier:
             if superseded_citation:
                 outdated_id, newer_id = superseded_citation
                 outdated_ev = evidence_map[outdated_id]
+                newer_ev = evidence_map.get(newer_id)
                 outdated_years = self._extract_years(f"{getattr(outdated_ev, 'title', '') or ''} {outdated_ev.excerpt}")
+                newer_years = self._extract_years(
+                    f"{getattr(newer_ev, 'title', '') or ''} {newer_ev.excerpt}"
+                ) if newer_ev else set()
 
-                # Check if the claim explicitly frames this as the historical / older period
-                mentions_outdated_year = bool(claim_years and outdated_years and claim_years.intersection(outdated_years))
-                is_valid_historical = mentions_outdated_year or (has_historical_marker and not has_current_marker)
+                max_outdated_year = max(outdated_years) if outdated_years else 0
+                max_newer_year = max(newer_years) if newer_years else 0
+                superseding_year = max_newer_year if max_newer_year > max_outdated_year else None
+
+                # Check if claim explicitly references a year earlier than the superseding decision (or matching outdated doc)
+                has_post_supersession_year = superseding_year is not None and any(y >= superseding_year for y in claim_years)
+                mentions_outdated_year = (
+                    bool(claim_years and outdated_years and claim_years.intersection(outdated_years))
+                    and not has_post_supersession_year
+                )
+                if claim_years and superseding_year is not None:
+                    claim_year_before_supersession = (
+                        any(y < superseding_year for y in claim_years)
+                        and not has_post_supersession_year
+                    )
+                else:
+                    claim_year_before_supersession = bool(claim_years)
+
+                # Check if the overall report frames the analysis in a past historical period prior to supersession
+                if report_header_years and superseding_year is not None:
+                    report_year_before_supersession = (
+                        any(y < superseding_year for y in report_header_years)
+                        and not any(y >= superseding_year for y in report_header_years)
+                    )
+                else:
+                    report_year_before_supersession = bool(report_header_years)
+
+                report_is_historical = (
+                    (report_year_before_supersession or report_header_has_historical)
+                    and not report_header_has_current
+                )
+
+                is_valid_historical = (
+                    mentions_outdated_year
+                    or claim_year_before_supersession
+                    or (bool(_HISTORICAL_TERMS_PATTERN.search(claim_text_lower)) and not has_current_marker)
+                    or (report_is_historical and not has_current_marker)
+                )
 
                 # A claim is flagged ONLY when it asserts the superseded rule as currently in force,
                 # or cites the superseded document as authority for a current claim without stating the reversal.
-                # A claim that correctly states the reversal/overruling MUST pass.
+                # A claim framed historically (prior to supersession) or correctly stating the reversal MUST pass.
                 if (has_current_marker or not is_valid_historical) and not is_stating_reversal:
                     temporal_conflicts_count += 1
                     err_msg = (
