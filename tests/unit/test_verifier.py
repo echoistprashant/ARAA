@@ -407,3 +407,54 @@ def test_verifier_q2_historical_mixed_evidence_regression():
     assert result.grounding_score == 1.0
     assert result.temporal_conflicts_count == 0
     assert not any("Temporal violation" in w for w in result.warnings)
+
+
+def test_verifier_adversarial_negated_reversal_flagged():
+    """Adversarial keyword test: a claim containing reversal words ('overrule')
+    inside a negation while asserting the old rule as current ('still applies today;
+    Loper Bright did not overrule it') must still be flagged as a temporal violation.
+    """
+    verifier = Verifier()
+    evidence = [
+        EvidenceItem(
+            id="ev_chevron_1984",
+            tool_name="web_search",
+            title="Chevron U.S.A. Inc. v. NRDC, 467 U.S. 837 (1984)",
+            source_url="https://supreme.justia.com/cases/federal/us/467/837/",
+            excerpt=(
+                "In Chevron v. NRDC (1984), Chevron deference applies when courts defer to "
+                "reasonable agency interpretations of ambiguous statutes."
+            ),
+            trust_level="untrusted",
+        ),
+        EvidenceItem(
+            id="ev_loper_2024",
+            tool_name="web_search",
+            title="Loper Bright Enterprises v. Raimondo (2024)",
+            source_url="https://www.supremecourt.gov/opinions/23pdf/22-451_7m58.pdf",
+            excerpt=(
+                "In Loper Bright Enterprises v. Raimondo (2024), the Supreme Court overruled "
+                "Chevron deference and Chevron v. NRDC (1984), which no longer applies."
+            ),
+            trust_level="untrusted",
+        ),
+    ]
+
+    for cited_id in ("ev_chevron_1984", "ev_loper_2024"):
+        report = StructuredReport(
+            title="Adversarial Claim Test",
+            executive_summary="Testing negated reversal wording.",
+            claims=[
+                ReportClaim(
+                    text="Chevron deference still applies today; Loper Bright did not overrule it.",
+                    evidence_ids=[cited_id],
+                )
+            ],
+            conclusion="Chevron remains in force.",
+        )
+
+        result = verifier.verify(report, evidence)
+        assert result.passed is False
+        assert result.temporal_conflicts_count == 1
+        assert result.claim_details[0].temporal_validity == "superseded_version"
+        assert any("Temporal violation" in w for w in result.warnings)

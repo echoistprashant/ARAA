@@ -61,6 +61,34 @@ _HISTORICAL_TERMS_PATTERN = _compile_terms_pattern(HISTORICAL_TERMS)
 _REVERSAL_KEYWORDS_PATTERN = _compile_terms_pattern(REVERSAL_KEYWORDS)
 _REVERSAL_CLAIM_PATTERN = _compile_terms_pattern(REVERSAL_CLAIM_TERMS)
 
+_NEGATED_REVERSAL_PATTERN = re.compile(
+    r"\b(?:not|never|no|without|\w+n't|fail(?:ed|s)?\s+to|refus(?:ed|es|e)?\s+to)\s+"
+    r"(?:actually\s+|expressly\s+|really\s+|be\s+)?"
+    r"(?:overrule|overrules|overruled|overruling|"
+    r"reverse|reverses|reversed|reversing|"
+    r"supersede|supersedes|superseded|superseding|"
+    r"overturn|overturns|overturned|overturning|"
+    r"repeal|repeals|repealed|repealing|"
+    r"replace|replaces|replaced|replacing|"
+    r"end|ended|ends|ending)\b"
+)
+
+_OLD_RULE_STILL_VALID_PATTERN = re.compile(
+    r"\b(?:still\s+applies|still\s+governs|still\s+in\s+effect|remains\s+in\s+effect|"
+    r"remains\s+good\s+law|remains\s+the\s+law|continues\s+to\s+govern|continues\s+to\s+apply|"
+    r"is\s+still\s+controlling)\b"
+)
+
+
+def _is_claim_stating_reversal(claim_text_lower: str) -> bool:
+    """Returns True only if the claim affirms a reversal/cessation rather than negating it
+    or asserting that the superseded rule still governs today.
+    """
+    if _OLD_RULE_STILL_VALID_PATTERN.search(claim_text_lower):
+        return False
+    cleaned = _NEGATED_REVERSAL_PATTERN.sub(" ", claim_text_lower)
+    return bool(_REVERSAL_CLAIM_PATTERN.search(cleaned))
+
 
 class ClaimVerificationStatus(BaseModel):
     """Detailed verification record for an individual report claim."""
@@ -229,7 +257,9 @@ class Verifier:
             claim_years = self._extract_years(claim.text)
             has_current_marker = bool(_CURRENT_TERMS_PATTERN.search(claim_text_lower))
             has_historical_marker = bool(_HISTORICAL_TERMS_PATTERN.search(claim_text_lower)) or bool(claim_years)
-            is_stating_reversal = bool(_REVERSAL_CLAIM_PATTERN.search(claim_text_lower))
+            is_stating_reversal = _is_claim_stating_reversal(claim_text_lower)
+            asserts_old_rule_still_valid = bool(_OLD_RULE_STILL_VALID_PATTERN.search(claim_text_lower))
+            negates_reversal = bool(_NEGATED_REVERSAL_PATTERN.search(claim_text_lower))
 
             # Check if any cited evidence is superseded
             superseded_citation = None
@@ -237,6 +267,39 @@ class Verifier:
                 if ev.id in superseded_map:
                     superseded_citation = (ev.id, superseded_map[ev.id])
                     break
+
+            # Also catch claims asserting a superseded rule still governs or denying reversal while citing reversal evidence
+            reversal_evidence_cited = next(
+                (
+                    ev.id for ev in valid_evs
+                    if ev.id in superseded_map.values()
+                    or _REVERSAL_KEYWORDS_PATTERN.search(f"{getattr(ev, 'title', '') or ''} {ev.excerpt}".lower())
+                ),
+                None,
+            )
+            if not superseded_citation and reversal_evidence_cited and not is_stating_reversal and (
+                asserts_old_rule_still_valid or (negates_reversal and has_current_marker)
+            ):
+                temporal_conflicts_count += 1
+                err_msg = (
+                    f"Temporal violation: Claim asserts that a reversed rule still governs today or denies "
+                    f"reversal, contradicting cited evidence ({reversal_evidence_cited})."
+                )
+                details.append(
+                    ClaimVerificationStatus(
+                        claim_text=claim.text,
+                        is_grounded=False,
+                        evidence_ids=claim.evidence_ids,
+                        trust_level="temporal_conflict",
+                        notes=err_msg,
+                        temporal_validity="superseded_version",
+                    )
+                )
+                unsupported.append(claim.text)
+                warn = f"Temporal violation: Claim asserts superseded rule still applies against reversal evidence ({reversal_evidence_cited})."
+                if warn not in warnings:
+                    warnings.append(warn)
+                continue
 
             if superseded_citation:
                 outdated_id, newer_id = superseded_citation
