@@ -111,3 +111,59 @@ def test_run_state_json_serialization():
     assert restored.run_id == "run_check_1"
     assert restored.plan is not None
     assert restored.plan.steps[0].goal == "Step 1"
+
+
+def test_reduce_record_tool_result_deduplicates_normalized_urls():
+    """Verifies that canonical, /amp/, query-string, and trailing-slash URL variants
+    are deduplicated both within a tool call and across sequential tool calls.
+    """
+    state = RunState(run_id="run_dedup", task="Dedup Test", step_count=1)
+
+    res1 = ToolResult(
+        content="Search results 1",
+        status="succeeded",
+        citations=[
+            {
+                "source_url": "https://www.cnbc.com/2024/06/28/chevron.html",
+                "title": "CNBC Canonical",
+                "snippet": "Supreme Court overturns Chevron.",
+            },
+            {
+                "source_url": "https://www.cnbc.com/amp/2024/06/28/chevron.html?utm_source=ddg",
+                "title": "CNBC AMP Duplicate",
+                "snippet": "Supreme Court overturns Chevron (AMP).",
+            },
+            {
+                "source_url": "https://supreme.justia.com/cases/federal/us/467/837/",
+                "title": "Justia Chevron",
+                "snippet": "Chevron 467 U.S. 837.",
+            },
+        ],
+        trust_level="untrusted",
+    )
+    reduce_record_tool_result(state, "call_1", "web_search", res1)
+    assert len(state.evidence) == 2
+    assert state.evidence[0].title == "CNBC Canonical"
+    assert state.evidence[1].title == "Justia Chevron"
+
+    state.step_count = 2
+    res2 = ToolResult(
+        content="Search results 2",
+        status="succeeded",
+        citations=[
+            {
+                "source_url": "https://supreme.justia.com/cases/federal/us/467/837",
+                "title": "Justia Chevron Duplicate Across Steps",
+                "snippet": "Duplicate across step.",
+            },
+            {
+                "source_url": "https://www.scotusblog.com/2024/06/loper-bright/",
+                "title": "SCOTUSblog",
+                "snippet": "Unique new source.",
+            },
+        ],
+        trust_level="untrusted",
+    )
+    reduce_record_tool_result(state, "call_2", "web_search", res2)
+    assert len(state.evidence) == 3
+    assert state.evidence[2].title == "SCOTUSblog"

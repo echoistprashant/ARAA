@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from enum import Enum
 import re
 from typing import Any, Literal
+from urllib.parse import urlparse
 from pydantic import BaseModel, Field
 
 from app.llm.client import ChatMessage, Role, TokenUsage
@@ -83,13 +84,29 @@ def reduce_add_message(state: RunState, message: ChatMessage) -> RunState:
     return state
 
 
+def normalize_url(url: str | None) -> str:
+    """Normalizes URLs for evidence deduplication by stripping /amp/ segments,
+    query strings, fragments, and trailing slashes.
+    """
+    if not url or not url.strip():
+        return ""
+    parsed = urlparse(url.strip())
+    scheme = parsed.scheme.lower()
+    netloc = parsed.netloc.lower()
+    clean_path = re.sub(r"/amp(?=/|$)", "", parsed.path)
+    clean_path = re.sub(r"/+", "/", clean_path).rstrip("/")
+    if scheme and netloc:
+        return f"{scheme}://{netloc}{clean_path}"
+    return clean_path
+
+
 def reduce_record_tool_result(
     state: RunState,
     tool_call_id: str,
     tool_name: str,
     result: ToolResult,
 ) -> RunState:
-    """Appends the tool observation and extracts evidence items."""
+    """Appends the tool observation and extracts deduplicated evidence items."""
     # 1. Append tool observation message to prompt history
     state.messages.append(
         ChatMessage(
@@ -102,7 +119,19 @@ def reduce_record_tool_result(
 
     # 2. Extract evidence items if tool provides citations or factual findings
     if result.status == "succeeded" and result.citations:
+        seen_urls = {
+            normalize_url(ev.source_url)
+            for ev in state.evidence
+            if ev.source_url
+        }
         for idx, citation in enumerate(result.citations):
+            source_url = citation.get("source_url") or citation.get("url") or citation.get("source")
+            norm_url = normalize_url(source_url)
+            if norm_url and norm_url in seen_urls:
+                continue
+            if norm_url:
+                seen_urls.add(norm_url)
+
             item_id = f"ev_{state.step_count}_{idx}_{tool_name}"
             # Extract distinct snippet and title for each individual evidence item
             snippet = citation.get("snippet") or citation.get("excerpt")
@@ -121,7 +150,6 @@ def reduce_record_tool_result(
                 else:
                     snippet = result.content[:500].strip()
 
-            source_url = citation.get("source_url") or citation.get("url") or citation.get("source")
             query = citation.get("query")
             state.evidence.append(
                 EvidenceItem(
