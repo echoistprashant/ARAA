@@ -42,7 +42,12 @@ class Synthesizer:
             "INSTRUCTIONS:\n"
             "1. Synthesize a structured research report based ONLY on the evidence above.\n"
             "2. For every factual claim, you MUST attach the exact evidence_ids supporting it.\n"
-            "3. Format your response strictly as valid JSON matching this schema:\n"
+            "3. TEMPORAL ACCURACY & VERSION ATTRIBUTION:\n"
+            "   - When evidence contains older vs newer decisions, policies, or rulings (or where a document reverses or supersedes an earlier one), explicitly distinguish between historical rules vs what applies TODAY.\n"
+            "   - When stating past rules, cite the historical document with its date.\n"
+            "   - When stating current rules, cite the active superseding document with its date.\n"
+            "   - Never present an outdated, reversed, or superseded version as current reality.\n"
+            "4. Format your response strictly as valid JSON matching this schema:\n"
             "{\n"
             '  "title": "...",\n'
             '  "executive_summary": "...",\n'

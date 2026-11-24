@@ -24,6 +24,7 @@ class EvidenceItem(BaseModel):
     id: str
     tool_name: str
     excerpt: str
+    title: str | None = None
     source_url: str | None = None
     query: str | None = None
     trust_level: Literal["trusted", "untrusted"] = "untrusted"
