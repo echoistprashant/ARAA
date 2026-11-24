@@ -33,6 +33,18 @@ class WebSearchTool:
         self.provider = search_provider or settings.SEARCH_PROVIDER
         self.tavily_key = tavily_api_key or settings.TAVILY_API_KEY
 
+    @staticmethod
+    def _is_irrelevant_profile_url(url: str, query: str) -> bool:
+        """Filters accidental personal profile directory pages (e.g., linkedin.com/in/...)
+        unless the user query explicitly targets LinkedIn.
+        """
+        if "linkedin" in query.lower():
+            return False
+        parsed = urllib.parse.urlparse(url.strip())
+        host = parsed.netloc.lower()
+        path = parsed.path.lower()
+        return ("linkedin.com" in host) and (path.startswith("/in/") or path.startswith("/pub/"))
+
     async def _search_duckduckgo(self, query: str, max_results: int) -> tuple[str, list[dict[str, Any]]]:
         """Queries DuckDuckGo HTML endpoint without requiring API keys or dependencies."""
         encoded_query = urllib.parse.quote_plus(query)
@@ -59,7 +71,9 @@ class WebSearchTool:
         urls = re.findall(r'<a class="result__url[^>]*href="([^"]+)"', html)
         titles = re.findall(r'<a class="result__url[^>]*>(.*?)</a>', html)
 
-        for i in range(min(len(snippets), max_results)):
+        for i in range(len(snippets)):
+            if len(results) >= max_results:
+                break
             snippet_clean = re.sub(r"<[^>]+>", "", snippets[i]).strip()
             raw_url = urls[i] if i < len(urls) else "https://duckduckgo.com"
             title = re.sub(r"<[^>]+>", "", titles[i]).strip() if i < len(titles) else "Search Result"
@@ -70,6 +84,9 @@ class WebSearchTool:
                 dest_url = parsed.get("uddg", [raw_url])[0]
             else:
                 dest_url = raw_url
+
+            if self._is_irrelevant_profile_url(dest_url, query):
+                continue
 
             results.append({
                 "title": title,
@@ -117,10 +134,13 @@ class WebSearchTool:
 
         formatted_lines = [f"Search Results for '{query}':"]
         citations = []
-        for idx, r in enumerate(raw_results, start=1):
+        for r in raw_results:
             title = r.get("title", "Untitled")
             source_url = r.get("url", "")
             snippet = r.get("content", "")
+            if self._is_irrelevant_profile_url(source_url, query):
+                continue
+            idx = len(citations) + 1
             formatted_lines.append(f"[{idx}] {title}\n    URL: {source_url}\n    Snippet: {snippet}")
             citations.append({
                 "source_url": source_url,
