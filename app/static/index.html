@@ -2241,9 +2241,10 @@
         data.evidence.forEach((ev, idx) => {
           const card = document.createElement('div');
           card.className = 'evidence-box';
+          const headerTitle = ev.title ? `[${idx + 1}] ${ev.title}` : `[${idx + 1}] ${ev.tool_name}`;
           card.innerHTML = `
             <div class="evidence-box-head">
-              <span class="evidence-tool-name">[${idx + 1}] ${ev.tool_name}</span>
+              <span class="evidence-tool-name">${headerTitle}</span>
               <span class="evidence-badge ${ev.trust_level === 'trusted' ? '' : 'is-untrusted'}">${ev.trust_level}</span>
             </div>
             <p class="evidence-excerpt-text">"${ev.excerpt}"</p>

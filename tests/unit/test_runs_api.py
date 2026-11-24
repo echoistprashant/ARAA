@@ -1,5 +1,14 @@
+import pytest
 from fastapi.testclient import TestClient
 from app.main import create_app
+
+
+@pytest.fixture(autouse=True)
+def mock_background_execution(monkeypatch):
+    """Prevents background tasks from launching live multi-step agent runs during API unit tests."""
+    async def noop_execute(*args, **kwargs):
+        pass
+    monkeypatch.setattr("app.api.v1.runs._execute_agent_run", noop_execute)
 
 
 def test_frontend_served_at_root():

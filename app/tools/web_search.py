@@ -84,7 +84,12 @@ class WebSearchTool:
         citations = []
         for idx, r in enumerate(results, start=1):
             formatted_lines.append(f"[{idx}] {r['title']}\n    URL: {r['url']}\n    Snippet: {r['snippet']}")
-            citations.append({"source_url": r["url"], "title": r["title"]})
+            citations.append({
+                "source_url": r["url"],
+                "title": r["title"],
+                "snippet": r["snippet"],
+                "query": query,
+            })
 
         return "\n\n".join(formatted_lines), citations
 
@@ -117,7 +122,12 @@ class WebSearchTool:
             source_url = r.get("url", "")
             snippet = r.get("content", "")
             formatted_lines.append(f"[{idx}] {title}\n    URL: {source_url}\n    Snippet: {snippet}")
-            citations.append({"source_url": source_url, "title": title})
+            citations.append({
+                "source_url": source_url,
+                "title": title,
+                "snippet": snippet,
+                "query": query,
+            })
 
         return "\n\n".join(formatted_lines), citations
 

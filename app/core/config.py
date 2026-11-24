@@ -35,6 +35,7 @@ class Settings(BaseSettings):
     PLANNER_MODEL: str = "gemini-flash-lite-latest"
     ACTOR_MODEL: str = "gemini-flash-lite-latest"
     VERIFIER_MODEL: str = "gemini-flash-lite-latest"
+    GEMINI_FALLBACK_MODEL: str | None = None
 
     # Search Provider
     SEARCH_PROVIDER: Literal["duckduckgo", "tavily", "brave"] = "duckduckgo"

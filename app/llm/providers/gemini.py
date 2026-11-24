@@ -1,5 +1,7 @@
 import asyncio
 import logging
+import random
+import re
 import time
 from typing import Any
 import httpx
@@ -17,7 +19,7 @@ from app.llm.client import (
 
 logger = logging.getLogger(__name__)
 
-# Models to try in order when the primary is overloaded/busy or unavailable.
+# Models to try in order when the primary is overloaded/busy or unavailable (used if GEMINI_FALLBACK_MODEL is unset).
 FALLBACK_MODELS = [
     "gemini-flash-lite-latest",
     "gemini-3.5-flash-lite",
@@ -26,22 +28,34 @@ FALLBACK_MODELS = [
     "gemini-3.1-flash-lite",
 ]
 
-# HTTP status codes that indicate the model is unavailable or busy, warranting a fallback.
-_FALLBACK_STATUSES = {404, 429, 500, 502, 503, 504}
+# HTTP status codes that warrant retry with exponential backoff & jitter.
+_RETRY_STATUSES = {429, 500, 502, 503, 504}
 
 
 class GeminiProvider:
     """Wire-level adapter for Google Gemini models using native HTTP REST API.
     
     100% Free Tier compatible via Google AI Studio API Key.
-    Implements the LLMClient protocol.
+    Implements the LLMClient protocol with exponential backoff, jitter, and fallback model support.
     """
 
     BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
 
-    def __init__(self, api_key: str | None = None, model: str | None = None):
+    def __init__(
+        self,
+        api_key: str | None = None,
+        model: str | None = None,
+        fallback_model: str | None = None,
+        max_attempts: int = 5,
+        base_delay: float = 0.5,
+        max_delay: float = 8.0,
+    ):
         self.api_key = api_key or settings.GEMINI_API_KEY
         self.model = model or settings.ACTOR_MODEL
+        self.fallback_model = fallback_model or settings.GEMINI_FALLBACK_MODEL
+        self.max_attempts = max_attempts
+        self.base_delay = base_delay
+        self.max_delay = max_delay
 
     def _convert_messages(
         self, messages: list[ChatMessage]
@@ -164,72 +178,105 @@ class GeminiProvider:
         if gemini_tools:
             payload["tools"] = gemini_tools
 
-        # Build ordered list of models to try: primary first, then fallbacks.
-        models_to_try = [self.model] + [
-            m for m in FALLBACK_MODELS if m != self.model
-        ]
+        # Build ordered list of models to try: primary first, then fallback(s).
+        configured_fallback = self.fallback_model or settings.GEMINI_FALLBACK_MODEL
+        if configured_fallback:
+            fallback_list = [configured_fallback] if configured_fallback != self.model else []
+        else:
+            # If unset, behavior stays as before (ordered pool of fallback models)
+            fallback_list = [m for m in FALLBACK_MODELS if m != self.model]
+
+        models_to_try = [self.model] + fallback_list
 
         last_resp: httpx.Response | None = None
         last_error_msg: str = "Unknown error"
         last_latency_ms: int = 0
         active_model: str = self.model
+        resp: httpx.Response | None = None
 
-        for attempt, model in enumerate(models_to_try):
-            start_time = time.perf_counter()
-            resp, latency_ms, exc = await self._call_model(model, payload, start_time)
-
-            if exc is not None:
-                last_error_msg = f"Network/timeout error for model '{model}': {exc}"
-                if attempt < len(models_to_try) - 1:
-                    logger.warning(
-                        "Gemini model '%s' failed with error (%s). Waiting 1.5s then trying fallback model '%s'…",
-                        model,
-                        exc,
-                        models_to_try[attempt + 1],
-                    )
-                    await asyncio.sleep(1.5)
-                    continue
-                raise ToolExecutionError(last_error_msg, retryable=True)
-
-            if resp is not None and resp.status_code == 200:
-                active_model = model
-                last_latency_ms = latency_ms
-                if attempt > 0:
-                    logger.warning(
-                        "Gemini model fallback: '%s' was busy/unavailable, "
-                        "successfully switched to '%s'.",
-                        self.model,
-                        model,
-                    )
-                break  # success — exit fallback loop
-
-            status_code = resp.status_code if resp is not None else 0
-            err_text = resp.text if resp is not None else ""
-            last_resp = resp
-            last_latency_ms = latency_ms
-            last_error_msg = f"HTTP {status_code} for model '{model}': {err_text[:200]}"
-
-            if status_code in _FALLBACK_STATUSES and attempt < len(models_to_try) - 1:
-                backoff_s = 1.5 if status_code == 503 else 0.5
+        for model_idx, model in enumerate(models_to_try):
+            is_fallback = model_idx > 0
+            if is_fallback:
                 logger.warning(
-                    "Gemini model '%s' returned HTTP %d. Waiting %.1fs then retrying with fallback model '%s'…",
+                    "Primary model exhausted or unavailable. Switching to fallback Gemini model: '%s'...",
                     model,
-                    status_code,
-                    backoff_s,
-                    models_to_try[attempt + 1],
                 )
-                await asyncio.sleep(backoff_s)
-                continue  # try next model
 
-            # Non-fallback error or exhausted fallbacks — raise.
-            raise ToolExecutionError(
-                f"Gemini API returned HTTP {status_code} for model '{model}': {err_text}",
-                retryable=(status_code in [429, 500, 502, 503, 504]),
-            )
+            model_succeeded = False
+            for attempt in range(1, self.max_attempts + 1):
+                start_time = time.perf_counter()
+                call_resp, latency_ms, exc = await self._call_model(model, payload, start_time)
+                last_latency_ms = latency_ms
+
+                if exc is not None:
+                    last_error_msg = f"Network/timeout error for model '{model}': {exc}"
+                    if attempt < self.max_attempts:
+                        delay = min(self.max_delay, self.base_delay * (2 ** (attempt - 1))) + random.uniform(0.01, 0.1)
+                        logger.warning(
+                            "Gemini model '%s' network error on attempt %d/%d (%s). Retrying in %.2fs with backoff...",
+                            model, attempt, self.max_attempts, exc, delay,
+                        )
+                        await asyncio.sleep(delay)
+                        continue
+                    else:
+                        logger.warning(
+                            "Gemini model '%s' exhausted all %d attempts due to network error (%s).",
+                            model, self.max_attempts, exc,
+                        )
+                        break
+
+                if call_resp is not None and call_resp.status_code == 200:
+                    resp = call_resp
+                    active_model = model
+                    model_succeeded = True
+                    if is_fallback:
+                        logger.info(
+                            "Fallback Gemini model '%s' succeeded on attempt %d.",
+                            model, attempt,
+                        )
+                    break
+
+                status_code = call_resp.status_code if call_resp is not None else 0
+                err_text = call_resp.text if call_resp is not None else ""
+                last_resp = call_resp
+                last_error_msg = f"HTTP {status_code} for model '{model}': {err_text[:200]}"
+
+                # 404 indicates model endpoint does not exist on this version; don't retry, switch to fallback
+                if status_code == 404:
+                    logger.warning("Gemini model '%s' returned HTTP 404 (not found). Proceeding to fallback.", model)
+                    break
+
+                is_retryable = status_code in _RETRY_STATUSES or "unavailable" in err_text.lower() or "overloaded" in err_text.lower()
+
+                if is_retryable:
+                    if attempt < self.max_attempts:
+                        delay = min(self.max_delay, self.base_delay * (2 ** (attempt - 1))) + random.uniform(0.01, 0.1)
+                        logger.warning(
+                            "Gemini model '%s' returned HTTP %d on attempt %d/%d (%s). Retrying in %.2fs with backoff...",
+                            model, status_code, attempt, self.max_attempts, err_text[:120], delay,
+                        )
+                        await asyncio.sleep(delay)
+                        continue
+                    else:
+                        logger.warning(
+                            "Gemini model '%s' exhausted all %d attempts with HTTP %d.",
+                            model, self.max_attempts, status_code,
+                        )
+                        break
+                else:
+                    # Non-retryable error (e.g. 400 Bad Request)
+                    raise ToolExecutionError(
+                        f"Gemini API returned HTTP {status_code} for model '{model}': {err_text}",
+                        retryable=False,
+                    )
+
+            if model_succeeded and resp is not None:
+                break
         else:
-            # All models exhausted — raise with last response info.
+            # All models and retries exhausted
             raise ToolExecutionError(
-                f"All Gemini models are currently busy or unavailable. Last error: {last_error_msg}",
+                f"The AI research model is currently unavailable or experiencing high demand. "
+                f"All retries and fallback models failed. Last error: {last_error_msg}",
                 retryable=True,
             )
 

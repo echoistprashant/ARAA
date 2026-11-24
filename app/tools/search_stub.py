@@ -46,9 +46,16 @@ class SearchStubTool:
         query_lower = args.query.lower()
 
         matches = []
-        for key, snippet in self._CORPUS.items():
+        citations = []
+        for idx, (key, snippet) in enumerate(self._CORPUS.items(), start=1):
             if key in query_lower:
-                matches.append(snippet)
+                matches.append(f"[{len(matches) + 1}] Local Docs: {key.capitalize()}\n    URL: https://docs.local/{key}\n    Snippet: {snippet}")
+                citations.append({
+                    "source_url": f"https://docs.local/{key}",
+                    "title": f"Local Docs: {key.capitalize()}",
+                    "snippet": snippet,
+                    "query": args.query,
+                })
 
         if not matches:
             content = f"No direct search matches found for '{args.query}'. Try broader terms like 'Qdrant', 'Weaviate', or 'pgvector'."
@@ -62,6 +69,6 @@ class SearchStubTool:
         return ToolResult(
             status="succeeded",
             content=f"Search Results for '{args.query}':\n{combined}",
-            citations=[{"source_url": "https://docs.local/research", "query": args.query}],
+            citations=citations,
             trust_level="untrusted",
         )

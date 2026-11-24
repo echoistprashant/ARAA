@@ -32,6 +32,19 @@ HISTORICAL_TERMS = {
     "at the time", "back in", "initially",
 }
 
+# Terms indicating a claim states a decision/policy reversal, overruling, or cessation
+REVERSAL_CLAIM_TERMS = {
+    "overrule", "overrules", "overruled", "overruling",
+    "reverse", "reverses", "reversed", "reversing",
+    "supersede", "supersedes", "superseded", "superseding",
+    "overturn", "overturns", "overturned", "overturning",
+    "repeal", "repeals", "repealed", "repealing",
+    "replace", "replaces", "replaced", "replacing",
+    "no longer", "not defer", "does not defer", "do not defer",
+    "no longer applies", "no longer defer", "no longer in effect",
+    "ended", "ends", "ending", "struck down", "abandoned",
+}
+
 YEAR_PATTERN = re.compile(r"\b(19\d{2}|20\d{2})\b")
 
 
@@ -94,19 +107,30 @@ class Verifier:
                 
                 other_text = f"{getattr(other_ev, 'title', '') or ''} {other_ev.excerpt}".lower()
                 other_years = self._extract_years(other_text)
+                max_other_year = max(other_years) if other_years else 0
                 min_other_year = min(other_years) if other_years else 0
+
+                # Check if other_ev itself discusses the reversal in a contemporary or newer year;
+                # an evidence document reporting the reversal is NOT an obsolete/superseded document!
+                other_has_reversal = any(kw in other_text for kw in REVERSAL_KEYWORDS)
+                if other_has_reversal and max_other_year >= max_rev_year:
+                    continue
 
                 # Check if the reversal text explicitly references keywords/identifiers from the other doc
                 other_tokens = set(re.findall(r"\b[a-zA-Z0-9_-]{3,}\b", other_text))
-                stopwords = {"the", "and", "for", "with", "all", "must", "from", "this", "that", "working", "rules"}
+                stopwords = {
+                    "the", "and", "for", "with", "all", "must", "from", "this", "that",
+                    "working", "rules", "policy", "court", "decision", "under", "case", "law",
+                }
                 meaningful_other_tokens = other_tokens - stopwords
                 
                 matches = [t for t in meaningful_other_tokens if t in rev_text]
                 
-                # If significant identifier overlap and either older year or explicit mention
-                if len(matches) >= 2 and (not rev_years or not other_years or min_other_year <= max_rev_year):
+                # Check for significant identifier overlap and older year or explicit supersession
+                is_older = (max_other_year < max_rev_year) if (other_years and rev_years) else True
+                if len(matches) >= 2 and is_older and not other_has_reversal:
                     superseded_map[other_ev.id] = rev_ev.id
-                elif other_years and rev_years and min_other_year < max_rev_year:
+                elif other_years and rev_years and max_other_year < max_rev_year and not other_has_reversal:
                     overlap_topic = len(set(rev_text.split()).intersection(set(other_text.split())))
                     if overlap_topic >= 5:
                         superseded_map[other_ev.id] = rev_ev.id
@@ -186,6 +210,7 @@ class Verifier:
             claim_years = self._extract_years(claim.text)
             has_current_marker = any(term in claim_text_lower for term in CURRENT_TERMS)
             has_historical_marker = any(term in claim_text_lower for term in HISTORICAL_TERMS) or bool(claim_years)
+            is_stating_reversal = any(term in claim_text_lower for term in REVERSAL_CLAIM_TERMS)
 
             # Check if any cited evidence is superseded
             superseded_citation = None
@@ -203,8 +228,10 @@ class Verifier:
                 mentions_outdated_year = bool(claim_years and outdated_years and claim_years.intersection(outdated_years))
                 is_valid_historical = mentions_outdated_year or (has_historical_marker and not has_current_marker)
 
-                # If claim asserts current reality or lacks explicit historical framing, it's a temporal violation
-                if has_current_marker or not is_valid_historical:
+                # A claim is flagged ONLY when it asserts the superseded rule as currently in force,
+                # or cites the superseded document as authority for a current claim without stating the reversal.
+                # A claim that correctly states the reversal/overruling MUST pass.
+                if (has_current_marker or not is_valid_historical) and not is_stating_reversal:
                     temporal_conflicts_count += 1
                     err_msg = (
                         f"Temporal violation: Claim asserts current rule/status, but cites an obsolete/superseded "
@@ -227,7 +254,7 @@ class Verifier:
                         warnings.append(warn)
                     continue
                 else:
-                    # Valid historical attribution
+                    # Valid historical attribution or claim accurately stating the reversal
                     grounded_count += 1
                     details.append(
                         ClaimVerificationStatus(
@@ -235,7 +262,7 @@ class Verifier:
                             is_grounded=True,
                             evidence_ids=claim.evidence_ids,
                             trust_level="untrusted" if untrusted_evs else "trusted",
-                            notes=f"Grounded historical claim. Accurately cites superseded version ({outdated_id}) in historical context. Lexical overlap: {overlap_ratio:.0%}",
+                            notes=f"Grounded claim accurately citing evidence in proper temporal context. Lexical overlap: {overlap_ratio:.0%}",
                             temporal_validity="valid",
                         )
                     )

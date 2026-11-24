@@ -183,3 +183,136 @@ def test_verifier_accepts_valid_historical_and_current_claims():
     assert result.temporal_conflicts_count == 0
     assert result.claim_details[0].temporal_validity == "valid"
     assert result.claim_details[1].temporal_validity == "valid"
+
+
+def test_verifier_loper_bright_overruling_claim_passes():
+    """Test a: A correct claim citing Loper Bright (2024) while evidence discusses
+    Chevron being overruled -> passes verification, no temporal violation.
+    """
+    verifier = Verifier()
+    evidence = [
+        EvidenceItem(
+            id="ev_wex_cornell",
+            tool_name="web_search",
+            title="Wex: Chevron Deference | Legal Information Institute",
+            source_url="https://www.law.cornell.edu/wex/chevron_deference",
+            excerpt="In Loper Bright Enterprises v. Raimondo (2024), the Supreme Court overruled Chevron U.S.A. v. Natural Resources Defense Council (1984), holding that courts must exercise independent judgment in statutory interpretation.",
+            trust_level="untrusted",
+        ),
+        EvidenceItem(
+            id="ev_loper_holding",
+            tool_name="web_search",
+            title="Loper Bright Enterprises v. Raimondo, 603 U.S. ___ (2024)",
+            source_url="https://www.supremecourt.gov/opinions/23pdf/22-451_7m58.pdf",
+            excerpt="The Supreme Court held that courts may not defer to an agency interpretation of the law simply because a statute is ambiguous, overruling Chevron.",
+            trust_level="untrusted",
+        ),
+    ]
+
+    report = StructuredReport(
+        title="Current Judicial Deference Under US Federal Law",
+        executive_summary="Analysis of judicial deference to federal agencies.",
+        claims=[
+            ReportClaim(
+                text="Under US federal law, courts currently do not defer to federal agencies' interpretations of ambiguous statutes following Loper Bright Enterprises v. Raimondo (2024), which overruled Chevron.",
+                evidence_ids=["ev_wex_cornell", "ev_loper_holding"],
+            )
+        ],
+        conclusion="Chevron deference is no longer controlling precedent.",
+    )
+
+    result = verifier.verify(report, evidence)
+    assert result.passed is True
+    assert result.grounding_score == 1.0
+    assert result.temporal_conflicts_count == 0
+    assert len(result.unsupported_claims) == 0
+    assert result.claim_details[0].temporal_validity == "valid"
+    assert not any("Temporal violation" in w for w in result.warnings)
+
+
+def test_verifier_chevron_as_current_law_flagged_as_temporal_violation():
+    """Test b: A claim that states the Chevron deference rule as current law
+    -> temporal violation flagged.
+    """
+    verifier = Verifier()
+    evidence = [
+        EvidenceItem(
+            id="ev_chevron_1984",
+            tool_name="web_search",
+            title="Chevron U.S.A. Inc. v. NRDC, 467 U.S. 837 (1984)",
+            source_url="https://supreme.justia.com/cases/federal/us/467/837/",
+            excerpt="In Chevron v. NRDC (1984), the Supreme Court established the doctrine of Chevron deference: if a statute is ambiguous, federal courts must defer to the agency's reasonable construction.",
+            trust_level="untrusted",
+        ),
+        EvidenceItem(
+            id="ev_loper_2024",
+            tool_name="web_search",
+            title="Loper Bright Enterprises v. Raimondo (2024)",
+            source_url="https://www.supremecourt.gov/opinions/23pdf/22-451_7m58.pdf",
+            excerpt="Loper Bright Enterprises v. Raimondo (2024): This decision explicitly overrules and supersedes Chevron v. NRDC (1984). Courts must not defer to agency interpretations.",
+            trust_level="untrusted",
+        ),
+    ]
+
+    report = StructuredReport(
+        title="US Administrative Law Overview",
+        executive_summary="Review of judicial deference principles.",
+        claims=[
+            ReportClaim(
+                text="Under US federal law, courts currently defer to federal agencies' interpretations of ambiguous statutes under Chevron deference.",
+                evidence_ids=["ev_chevron_1984"],
+            )
+        ],
+        conclusion="Courts follow Chevron.",
+    )
+
+    result = verifier.verify(report, evidence)
+    assert result.passed is False
+    assert result.temporal_conflicts_count == 1
+    assert len(result.unsupported_claims) == 1
+    assert result.claim_details[0].temporal_validity == "superseded_version"
+    assert any("Temporal violation" in w for w in result.warnings)
+
+
+def test_verifier_historical_chevron_claim_passes():
+    """Test c: A historical claim ('in 1990 the rule was Chevron') citing the 1984 decision
+    -> passes.
+    """
+    verifier = Verifier()
+    evidence = [
+        EvidenceItem(
+            id="ev_chevron_1984",
+            tool_name="web_search",
+            title="Chevron U.S.A. Inc. v. NRDC, 467 U.S. 837 (1984)",
+            source_url="https://supreme.justia.com/cases/federal/us/467/837/",
+            excerpt="In Chevron v. NRDC (1984), the Supreme Court established the doctrine of Chevron deference: if a statute is ambiguous, federal courts must defer to the agency's reasonable construction.",
+            trust_level="untrusted",
+        ),
+        EvidenceItem(
+            id="ev_loper_2024",
+            tool_name="web_search",
+            title="Loper Bright Enterprises v. Raimondo (2024)",
+            source_url="https://www.supremecourt.gov/opinions/23pdf/22-451_7m58.pdf",
+            excerpt="In Loper Bright Enterprises v. Raimondo (2024), the Supreme Court overruled Chevron v. NRDC (1984).",
+            trust_level="untrusted",
+        ),
+    ]
+
+    report = StructuredReport(
+        title="Historical Administrative Law in 1990",
+        executive_summary="Analysis of legal rules in the 1990s.",
+        claims=[
+            ReportClaim(
+                text="In 1990, the rule on judicial deference was Chevron deference, established by Chevron v. NRDC in 1984, which required courts to defer to reasonable agency interpretations.",
+                evidence_ids=["ev_chevron_1984"],
+            )
+        ],
+        conclusion="Chevron governed administrative statutory interpretation in 1990.",
+    )
+
+    result = verifier.verify(report, evidence)
+    assert result.passed is True
+    assert result.grounding_score == 1.0
+    assert result.temporal_conflicts_count == 0
+    assert len(result.unsupported_claims) == 0
+    assert result.claim_details[0].temporal_validity == "valid"

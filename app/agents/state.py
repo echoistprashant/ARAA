@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from enum import Enum
+import re
 from typing import Any, Literal
 from pydantic import BaseModel, Field
 
@@ -103,13 +104,33 @@ def reduce_record_tool_result(
     if result.status == "succeeded" and result.citations:
         for idx, citation in enumerate(result.citations):
             item_id = f"ev_{state.step_count}_{idx}_{tool_name}"
+            # Extract distinct snippet and title for each individual evidence item
+            snippet = citation.get("snippet") or citation.get("excerpt")
+            title = citation.get("title")
+
+            if not snippet:
+                # If no individual snippet was provided, parse corresponding [idx+1] block from result.content
+                pattern = rf"\[{idx + 1}\]\s*([^\n]+)?\n?(?:.*?Snippet:\s*(.*?))(?=(?:\n\[\d+\])|\Z)"
+                match = re.search(pattern, result.content, re.DOTALL)
+                if match:
+                    matched_title = match.group(1).strip() if match.group(1) else None
+                    matched_snippet = match.group(2).strip() if match.group(2) else None
+                    if matched_title and not title:
+                        title = matched_title
+                    snippet = matched_snippet or match.group(0)[:500].strip()
+                else:
+                    snippet = result.content[:500].strip()
+
+            source_url = citation.get("source_url") or citation.get("url") or citation.get("source")
+            query = citation.get("query")
             state.evidence.append(
                 EvidenceItem(
                     id=item_id,
                     tool_name=tool_name,
-                    excerpt=result.content[:500],  # Bounded excerpt
-                    source_url=citation.get("source_url"),
-                    query=citation.get("query"),
+                    title=title,
+                    excerpt=snippet,
+                    source_url=source_url,
+                    query=query,
                     trust_level=result.trust_level,
                 )
             )

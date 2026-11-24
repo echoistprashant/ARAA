@@ -1,8 +1,34 @@
 import asyncio
+import logging
+import re
 import uuid
 from typing import Any
 from fastapi import APIRouter, BackgroundTasks, Header, HTTPException, Query
 from pydantic import BaseModel, Field
+
+logger = logging.getLogger(__name__)
+
+
+def _format_clean_error(err_str: str) -> str:
+    """Formats raw errors/JSON into human-readable user-facing status messages."""
+    err_lower = err_str.lower()
+    if any(s in err_lower for s in ["503", "unavailable", "high demand", "overloaded", "busy"]):
+        return (
+            "The AI research model is temporarily experiencing high demand (HTTP 503 / Service Unavailable). "
+            "All retries and fallbacks were exhausted. Your collected evidence has been preserved. Please retry shortly."
+        )
+    if any(s in err_lower for s in ["429", "resource_exhausted", "quota"]):
+        return (
+            "The AI service rate limit was reached (HTTP 429). "
+            "All retries were exhausted. Your collected evidence has been preserved. Please retry in a few moments."
+        )
+    if any(s in err_lower for s in ["500", "502", "504", "gateway"]):
+        return "The AI service encountered a temporary server error. Please retry shortly."
+    if "{" in err_str and "}" in err_str:
+        match = re.search(r'"message":\s*"([^"]+)"', err_str)
+        if match:
+            return f"Model error: {match.group(1)}"
+    return err_str[:300]
 
 from app.agents.exporter import ReportExporter
 from app.agents.orchestrator import Orchestrator
@@ -65,6 +91,7 @@ async def _execute_agent_run(run_id: str, task: str, user_role: str, session_id:
         )
 
         state = RunState(run_id=run_id, task=task, user_role=user_role, tenant_id=session_id)
+        final_state = state
         active_runs[run_id]["status"] = "running"
         await broadcast_event("run_started", {"run_id": run_id, "task": task})
 
@@ -72,6 +99,7 @@ async def _execute_agent_run(run_id: str, task: str, user_role: str, session_id:
 
         # Broadcast synthesis phase and checkpoint intermediate results
         active_runs[run_id]["step_count"] = final_state.step_count
+        active_runs[run_id]["evidence"] = [ev.model_dump() for ev in final_state.evidence]
         if final_state.final_report:
             active_runs[run_id]["final_report"] = final_state.final_report
         await broadcast_event("synthesizing", {"run_id": run_id, "message": "Synthesizing verified report & empirical audit..."})
@@ -109,9 +137,19 @@ async def _execute_agent_run(run_id: str, task: str, user_role: str, session_id:
         })
 
     except Exception as e:
+        logger.error("Error executing agent run '%s': %s", run_id, e, exc_info=True)
+        # Preserve work already done: collected evidence and step count must not be discarded
+        preserved_evidence = [
+            ev.model_dump() for ev in (getattr(final_state, "evidence", None) or getattr(state, "evidence", []))
+        ]
+        preserved_steps = getattr(final_state, "step_count", getattr(state, "step_count", 0))
+
+        clean_error = _format_clean_error(str(e))
         active_runs[run_id]["status"] = "failed"
-        active_runs[run_id]["error"] = str(e)
-        await event_broadcaster.publish(run_id, "failed", {"error": str(e)})
+        active_runs[run_id]["step_count"] = preserved_steps
+        active_runs[run_id]["evidence"] = preserved_evidence
+        active_runs[run_id]["error"] = clean_error
+        await event_broadcaster.publish(run_id, "failed", {"error": clean_error, "step_count": preserved_steps})
 
 
 @router.post("", response_model=RunSummaryResponse)
