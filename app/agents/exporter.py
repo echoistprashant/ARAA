@@ -1,3 +1,5 @@
+import re
+
 from app.agents.state import EvidenceItem
 from app.agents.synthesizer import StructuredReport
 from app.agents.verifier import VerificationResult
@@ -5,6 +7,82 @@ from app.agents.verifier import VerificationResult
 
 class ReportExporter:
     """Formats structured research reports and verification audits into clean, citable Markdown."""
+
+    @staticmethod
+    def _sanitize_excerpt(text: str) -> str:
+        """Removes relative anchor links (e.g. Wikipedia #cite_note-1) and normalizes whitespace."""
+        cleaned = re.sub(r"\[\[\d+\]\]\(#[^)]*\)", "", text)
+        cleaned = re.sub(r"\[\d+\]\(#[^)]*\)", "", cleaned)
+        cleaned = re.sub(r"\[([^\]]+)\]\(#[^)]*\)", r"\1", cleaned)
+        cleaned = re.sub(r"<a\b[^>]*href=[\"']#[^\"']*[\"'][^>]*>.*?</a>", "", cleaned, flags=re.IGNORECASE | re.DOTALL)
+        return re.sub(r"\s+", " ", cleaned).strip()
+
+    @staticmethod
+    def _inject_inline_citations(
+        raw_text: str,
+        report: StructuredReport,
+        evidence: list[EvidenceItem],
+        get_citation_num,
+    ) -> str:
+        """Ensures inline [1], [2] citations appear in raw_final_report when missing."""
+        if re.search(r"\[\d+\]", raw_text) or not evidence:
+            return raw_text
+
+        # Map each evidence item to its citation number and keywords
+        ev_entries: list[tuple[int, set[str]]] = []
+        for ev in evidence:
+            num = get_citation_num(ev.id)
+            words = {w for w in re.findall(r"[a-z0-9]{4,}", f"{ev.title or ''} {ev.excerpt}".lower())}
+            ev_entries.append((num, words))
+
+        # Also use synthesized claims' evidence_ids if available
+        claim_cites: list[tuple[set[str], list[int]]] = []
+        for claim in (report.claims or []):
+            if claim.evidence_ids:
+                c_words = {w for w in re.findall(r"[a-z0-9]{4,}", claim.text.lower())}
+                nums = [get_citation_num(eid) for eid in claim.evidence_ids]
+                if nums:
+                    claim_cites.append((c_words, nums))
+
+        out_lines: list[str] = []
+        for line in raw_text.splitlines():
+            stripped = line.strip()
+            # Skip headings, empty lines, tables, horizontal rules, blockquotes, and code fences
+            if (
+                not stripped
+                or stripped.startswith("#")
+                or stripped.startswith("|")
+                or stripped.startswith("---")
+                or stripped.startswith(">")
+                or stripped.startswith("```")
+                or len(stripped) < 40
+            ):
+                out_lines.append(line)
+                continue
+
+            line_words = {w for w in re.findall(r"[a-z0-9]{4,}", stripped.lower())}
+            best_nums: list[int] = []
+
+            best_overlap = 0
+            for c_words, nums in claim_cites:
+                overlap = len(line_words & c_words)
+                if overlap > best_overlap and overlap >= 2:
+                    best_overlap = overlap
+                    best_nums = nums
+
+            if not best_nums:
+                scored = [(len(line_words & e_words), num) for num, e_words in ev_entries]
+                scored.sort(reverse=True)
+                if scored and scored[0][0] >= 2:
+                    best_nums = [scored[0][1]]
+
+            if best_nums:
+                cite_str = " ".join(f"[{n}]" for n in dict.fromkeys(best_nums))
+                out_lines.append(f"{line} {cite_str}")
+            else:
+                out_lines.append(line)
+
+        return "\n".join(out_lines)
 
     @staticmethod
     def to_markdown(
@@ -26,8 +104,14 @@ class ReportExporter:
             return citation_index[ev_id]
 
         if raw_final_report and len(raw_final_report.strip()) > 30:
-            lines = [
+            body_text = ReportExporter._inject_inline_citations(
                 raw_final_report.strip(),
+                report,
+                evidence or [],
+                get_citation_num,
+            )
+            lines = [
+                body_text,
                 "",
             ]
             if verification:
@@ -102,7 +186,7 @@ class ReportExporter:
             for idx, ev in enumerate(sources_to_render, start=1):
                 num = citation_index.get(ev.id, idx)
                 source_display = ev.source_url if ev.source_url else f"`{ev.tool_name}`"
-                clean_excerpt = ev.excerpt[:150].replace("\n", " ").replace("|", "/")
+                clean_excerpt = ReportExporter._sanitize_excerpt(ev.excerpt)[:150].replace("|", "/")
                 lines.append(f"| [{num}] | {source_display} | `{ev.trust_level}` | \"{clean_excerpt}\" |")
             lines.append("")
 

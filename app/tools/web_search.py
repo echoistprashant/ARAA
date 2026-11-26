@@ -33,17 +33,21 @@ class WebSearchTool:
         self.provider = search_provider or settings.SEARCH_PROVIDER
         self.tavily_key = tavily_api_key or settings.TAVILY_API_KEY
 
-    @staticmethod
-    def _is_irrelevant_profile_url(url: str, query: str) -> bool:
-        """Filters accidental personal profile directory pages (e.g., linkedin.com/in/...)
-        unless the user query explicitly targets LinkedIn.
-        """
-        if "linkedin" in query.lower():
-            return False
+    _BLOCKED_SOCIAL_DOMAINS = (
+        "facebook.com",
+        "linkedin.com",
+        "x.com",
+        "twitter.com",
+        "instagram.com",
+        "tiktok.com",
+    )
+
+    @classmethod
+    def _is_irrelevant_profile_url(cls, url: str, query: str) -> bool:
+        """Filters social media domains and profile/post URLs from research sources."""
         parsed = urllib.parse.urlparse(url.strip())
-        host = parsed.netloc.lower()
-        path = parsed.path.lower()
-        return ("linkedin.com" in host) and (path.startswith("/in/") or path.startswith("/pub/"))
+        host = parsed.netloc.lower().split(":")[0]
+        return any(host == domain or host.endswith(f".{domain}") for domain in cls._BLOCKED_SOCIAL_DOMAINS)
 
     async def _search_duckduckgo(self, query: str, max_results: int) -> tuple[str, list[dict[str, Any]]]:
         """Queries DuckDuckGo HTML endpoint without requiring API keys or dependencies."""

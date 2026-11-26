@@ -1053,6 +1053,7 @@
   flex-direction: column;
   background-color: var(--color-paper-2);
   min-height: 480px;
+  min-width: 0;
 }
 
 /* Workspace Top Bar (Segmented Tabs + Actions) */
@@ -1235,6 +1236,26 @@
   font-weight: 500;
 }
 
+.grounding-status-pill.is-unverified {
+  border-color: rgba(217, 119, 6, 0.35);
+  background-color: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+
+[data-theme="dark"] .grounding-status-pill.is-unverified,
+[data-theme="obsidian"] .grounding-status-pill.is-unverified,
+[data-theme="graphite"] .grounding-status-pill.is-unverified {
+  border-color: rgba(251, 191, 36, 0.35);
+  background-color: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+}
+
+.grounding-status-pill.is-failed {
+  border-color: var(--color-bad-soft);
+  background-color: var(--color-bad-soft);
+  color: var(--color-bad);
+}
+
 .grounding-status-pill.hidden {
   display: none !important;
 }
@@ -1242,7 +1263,9 @@
 /* Tab Output Display Areas */
 .output-tab-pane {
   flex: 1;
+  min-width: 0;
   padding: var(--space-md);
+  overflow-x: hidden;
   overflow-y: auto;
   max-height: 520px;
 }
@@ -1256,7 +1279,10 @@
   color: var(--color-ink);
   font-size: var(--text-sm);
   line-height: 1.7;
-  max-width: 72ch;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .report-prose h1 {
@@ -1296,6 +1322,24 @@
 .report-prose p {
   margin-bottom: var(--space-sm);
   color: var(--color-ink-2);
+}
+
+.inline-citation {
+  display: inline-block;
+  font-family: var(--font-outlier);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-accent);
+  background-color: var(--color-accent-soft);
+  padding: 0 4px;
+  border-radius: 4px;
+  text-decoration: none;
+  vertical-align: baseline;
+  margin: 0 1px;
+}
+
+.inline-citation:hover {
+  text-decoration: underline;
 }
 
 .report-prose strong {
@@ -1381,10 +1425,54 @@
   padding: var(--space-xs);
   border-bottom: var(--rule-hair) solid var(--color-rule);
   color: var(--color-ink-2);
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .report-prose tr:last-child td {
   border-bottom: none;
+}
+
+@media (max-width: 639px) {
+  .report-prose table,
+  .report-prose thead,
+  .report-prose tbody,
+  .report-prose th,
+  .report-prose td,
+  .report-prose tr {
+    display: block;
+  }
+  .report-prose table {
+    border: none;
+    background: transparent;
+    overflow-x: visible;
+  }
+  .report-prose thead {
+    display: none;
+  }
+  .report-prose tr {
+    border: var(--rule-hair) solid var(--color-rule);
+    border-radius: 8px;
+    background: var(--color-paper-2);
+    padding: var(--space-xs);
+    margin-bottom: var(--space-xs);
+    box-shadow: var(--shadow-sm);
+  }
+  .report-prose td {
+    border-bottom: none;
+    padding: var(--space-3xs) 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .report-prose td[data-label]::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--color-muted);
+  }
 }
 
 .placeholder-empty-state {
@@ -1437,12 +1525,15 @@
   flex-direction: column;
   gap: var(--space-2xs);
   box-shadow: var(--shadow-sm);
+  min-width: 0;
 }
 
 .evidence-box-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
   font-size: var(--text-xs);
 }
 
@@ -1450,6 +1541,10 @@
   color: var(--color-accent);
   font-family: var(--font-outlier);
   font-weight: 500;
+  flex: 1 1 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .evidence-badge {
@@ -1460,6 +1555,8 @@
   background-color: var(--color-ok-soft);
   color: var(--color-ok);
   font-weight: 500;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .evidence-badge.is-untrusted {
@@ -1473,6 +1570,8 @@
   color: var(--color-ink-2);
   line-height: 1.5;
   margin: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .evidence-anchor {
@@ -1480,9 +1579,9 @@
   font-size: var(--text-xs);
   color: var(--color-accent);
   text-decoration: underline;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-all;
 }
 
 /* Raw JSON Inspector */
@@ -1494,6 +1593,8 @@
   font-family: var(--font-outlier);
   font-size: var(--text-xs);
   color: var(--color-ink-2);
+  max-width: 100%;
+  box-sizing: border-box;
   overflow-x: auto;
   line-height: 1.5;
   margin: 0;
@@ -1804,7 +1905,7 @@
 
               <!-- Grounding Badge -->
               <div id="groundingBadge" class="grounding-status-pill hidden">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <svg id="groundingBadgeIcon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
                 <span id="groundingBadgeText">Audit: Verified (100% Grounded)</span>
@@ -2211,7 +2312,92 @@
       
       if (content) {
         const cleanedContent = content.replace(/^(>\s*)\[!(?:NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*(?:\r?\n)?/gim, (m, prefix) => (m.endsWith('\n') ? '' : prefix));
-        document.getElementById('reportContainer').innerHTML = marked.parse(cleanedContent);
+        const reportEl = document.getElementById('reportContainer');
+        reportEl.innerHTML = marked.parse(cleanedContent);
+
+        // Build reference URL map from the References table, add row anchors, and attach data-label for mobile cards
+        const refUrls = {};
+        reportEl.querySelectorAll('table').forEach(table => {
+          const headers = Array.from(table.querySelectorAll('thead th')).map(th => (th.textContent || '').trim());
+          table.querySelectorAll('tbody tr, tr').forEach(tr => {
+            const cells = tr.querySelectorAll('td');
+            cells.forEach((td, i) => {
+              if (headers[i]) td.setAttribute('data-label', headers[i]);
+            });
+            if (cells.length >= 2) {
+              const match = (cells[0].textContent || '').trim().match(/^\[(\d+)\]$/);
+              if (match) {
+                const num = match[1];
+                tr.id = `ref-${num}`;
+                const link = cells[1].querySelector('a[href]');
+                const rawTextUrl = (cells[1].textContent || '').trim();
+                if (link && /^https?:\/\//i.test(link.getAttribute('href') || '')) {
+                  refUrls[num] = link.getAttribute('href');
+                } else if (/^https?:\/\//i.test(rawTextUrl)) {
+                  refUrls[num] = rawTextUrl;
+                }
+              }
+            }
+          });
+        });
+
+        // Strip broken relative anchors (e.g. #cite_note-1) and enforce target="_blank" on external links
+        reportEl.querySelectorAll('a[href]').forEach(a => {
+          const href = a.getAttribute('href') || '';
+          if (href.startsWith('#') && !href.startsWith('#ref-')) {
+            a.replaceWith(document.createTextNode(a.textContent || ''));
+            return;
+          }
+          if (/^https?:\/\//i.test(href)) {
+            a.setAttribute('target', '_blank');
+            a.setAttribute('rel', 'noopener noreferrer');
+          }
+        });
+
+        // Make inline [1], [2] citations clickable in report prose
+        const walker = document.createTreeWalker(reportEl, NodeFilter.SHOW_TEXT, {
+          acceptNode(node) {
+            if (!node.nodeValue || !/\[\d+\]/.test(node.nodeValue)) return NodeFilter.FILTER_REJECT;
+            const parent = node.parentElement;
+            if (!parent || parent.closest('table, pre, code, a, h1, h2, h3, h4, h5, h6')) {
+              return NodeFilter.FILTER_REJECT;
+            }
+            return NodeFilter.FILTER_ACCEPT;
+          }
+        });
+        const textNodes = [];
+        while (walker.nextNode()) textNodes.push(walker.currentNode);
+        textNodes.forEach(node => {
+          const frag = document.createDocumentFragment();
+          let lastIdx = 0;
+          const regex = /\[(\d+)\]/g;
+          let m;
+          while ((m = regex.exec(node.nodeValue)) !== null) {
+            if (m.index > lastIdx) {
+              frag.appendChild(document.createTextNode(node.nodeValue.slice(lastIdx, m.index)));
+            }
+            const num = m[1];
+            const url = refUrls[num];
+            const a = document.createElement('a');
+            a.className = 'inline-citation';
+            a.textContent = `[${num}]`;
+            if (url) {
+              a.href = url;
+              a.target = '_blank';
+              a.rel = 'noopener noreferrer';
+              a.title = `Open source [${num}]`;
+            } else {
+              a.href = `#ref-${num}`;
+              a.title = `Jump to reference [${num}]`;
+            }
+            frag.appendChild(a);
+            lastIdx = regex.lastIndex;
+          }
+          if (lastIdx < node.nodeValue.length) {
+            frag.appendChild(document.createTextNode(node.nodeValue.slice(lastIdx)));
+          }
+          node.parentNode.replaceChild(frag, node);
+        });
       } else if (data.error) {
         document.getElementById('reportContainer').innerHTML = `
           <div class="error-alert-box">
@@ -2228,12 +2414,21 @@
       }
 
       const badge = document.getElementById('groundingBadge');
+      const badgeIcon = document.getElementById('groundingBadgeIcon');
       const badgeText = document.getElementById('groundingBadgeText');
       if (data.grounding_score !== null && data.grounding_score !== undefined) {
-        badge.classList.remove('hidden');
-        badgeText.innerText = `Audit: ${data.audit_passed ? 'Verified' : 'Unverified'} (${Math.round(data.grounding_score * 100)}% Grounded)`;
+        const isVerified = Boolean(data.audit_passed) && data.grounding_score >= 0.8;
+        badge.classList.remove('hidden', 'is-unverified', 'is-failed');
+        if (isVerified) {
+          badgeIcon.innerHTML = '<polyline points="20 6 9 17 4 12"></polyline>';
+        } else {
+          badge.classList.add(data.grounding_score < 0.5 ? 'is-failed' : 'is-unverified');
+          badgeIcon.innerHTML = '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line>';
+        }
+        badgeText.innerText = `Audit: ${isVerified ? 'Verified' : 'Unverified'} (${Math.round(data.grounding_score * 100)}% Grounded)`;
       } else {
         badge.classList.add('hidden');
+        badge.classList.remove('is-unverified', 'is-failed');
       }
 
       const evContainer = document.getElementById('evidenceContainer');
@@ -2243,12 +2438,16 @@
           const card = document.createElement('div');
           card.className = 'evidence-box';
           const headerTitle = ev.title ? `[${idx + 1}] ${ev.title}` : `[${idx + 1}] ${ev.tool_name}`;
+          const cleanExcerpt = (ev.excerpt || '')
+            .replace(/\[\[\d+\]\]\(#[^)]*\)/g, '')
+            .replace(/\[\d+\]\(#[^)]*\)/g, '')
+            .replace(/\[([^\]]+)\]\(#[^)]*\)/g, '$1');
           card.innerHTML = `
             <div class="evidence-box-head">
               <span class="evidence-tool-name">${headerTitle}</span>
               <span class="evidence-badge ${ev.trust_level === 'trusted' ? '' : 'is-untrusted'}">${ev.trust_level}</span>
             </div>
-            <p class="evidence-excerpt-text">"${ev.excerpt}"</p>
+            <p class="evidence-excerpt-text">"${cleanExcerpt}"</p>
             ${ev.source_url ? `<a href="${ev.source_url}" target="_blank" rel="noopener noreferrer" class="evidence-anchor">${ev.source_url}</a>` : ''}
           `;
           evContainer.appendChild(card);
