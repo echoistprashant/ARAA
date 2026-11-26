@@ -154,3 +154,11 @@ def test_web_search_filters_social_media_domains():
         assert result.status == "succeeded"
         assert len(result.citations) == 1
         assert result.citations[0]["source_url"] == "https://irena.org/report-2025"
+
+
+def test_web_search_filters_social_url_bypass_variants():
+    """Verifies userinfo (@), trailing dots, and scheme-less social URLs are still filtered."""
+    assert WebSearchTool._is_irrelevant_profile_url("https://user@facebook.com/post", "solar")
+    assert WebSearchTool._is_irrelevant_profile_url("https://facebook.com./post", "solar")
+    assert WebSearchTool._is_irrelevant_profile_url("linkedin.com/posts/abc", "solar")
+    assert not WebSearchTool._is_irrelevant_profile_url("https://irena.org/report", "solar")

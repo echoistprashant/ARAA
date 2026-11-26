@@ -456,7 +456,7 @@
 .exa-textarea {
   width: 100%;
   min-height: 72px;
-  padding: var(--space-xs) var(--space-3xl) var(--space-xs) 0;
+  padding: var(--space-xs) 124px var(--space-xs) 0;
   background-color: transparent;
   border: none;
   color: var(--color-ink);
@@ -475,11 +475,23 @@
 .input-shortcut-cue {
   position: absolute;
   top: var(--space-xs);
-  right: 0;
+  right: 20px;
   font-family: var(--font-outlier);
   font-size: var(--text-xs);
   color: var(--color-muted);
+  background-color: var(--color-paper-2);
+  padding-left: 6px;
   pointer-events: none;
+}
+
+.query-validation-error {
+  color: var(--color-bad);
+  font-size: var(--text-xs);
+  margin: var(--space-3xs) 0 0;
+}
+
+.query-validation-error.hidden {
+  display: none;
 }
 
 /* Directive Toolbar: Role + Chips + Actions */
@@ -1742,6 +1754,7 @@
           <div class="input-shortcut-cue">
             <span>Ctrl + Enter</span>
           </div>
+          <p id="queryValidationError" class="query-validation-error hidden" role="alert">Please enter a research question before launching.</p>
         </div>
 
         <!-- Directive Bottom Toolbar -->
@@ -2062,6 +2075,8 @@
       taskInputEl.addEventListener('input', function() {
         this.style.height = 'auto';
         this.style.height = Math.min(this.scrollHeight, 220) + 'px';
+        const valErr = document.getElementById('queryValidationError');
+        if (valErr && this.value.trim()) valErr.classList.add('hidden');
       });
     }
 
@@ -2078,6 +2093,8 @@
       input.value = text;
       input.style.height = 'auto';
       input.style.height = Math.min(input.scrollHeight, 220) + 'px';
+      const valErr = document.getElementById('queryValidationError');
+      if (valErr) valErr.classList.add('hidden');
       input.focus();
     }
 
@@ -2138,15 +2155,24 @@
     async function startResearch() {
       const task = document.getElementById('taskInput').value.trim();
       const role = document.getElementById('userRole').value;
+      const valErr = document.getElementById('queryValidationError');
       if (!task) {
+        if (valErr) valErr.classList.remove('hidden');
         document.getElementById('taskInput').focus();
         return;
       }
+      if (valErr) valErr.classList.add('hidden');
 
       const startBtn = document.getElementById('startBtn');
       startBtn.disabled = true;
       startBtn.title = 'Synthesizing strategy...';
       startBtn.innerHTML = SUBMIT_LOADING_HTML;
+
+      const groundingBadge = document.getElementById('groundingBadge');
+      if (groundingBadge) {
+        groundingBadge.classList.add('hidden');
+        groundingBadge.classList.remove('is-unverified', 'is-failed');
+      }
 
       const feed = document.getElementById('terminalFeed');
       feed.innerHTML = '';
@@ -2169,14 +2195,28 @@
 
       try {
         const sid = getSessionId();
-        const res = await fetch('/api/v1/runs', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'X-Session-ID': sid
-          },
-          body: JSON.stringify({ task, user_role: role, session_id: sid })
-        });
+        let res;
+        for (let attempt = 0; attempt < 2; attempt++) {
+          res = await fetch('/api/v1/runs', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Session-ID': sid
+            },
+            body: JSON.stringify({ task, user_role: role, session_id: sid })
+          });
+          if (res.status !== 503 || attempt === 1) break;
+          addLog('Retrying Dispatch', 'Received HTTP 503 from server; retrying...', 'warn');
+          await new Promise(r => setTimeout(r, 250));
+        }
+        if (!res.ok) {
+          let errMsg = `Request failed with HTTP ${res.status}`;
+          try {
+            const errBody = await res.json();
+            if (errBody && errBody.detail) errMsg = `${errMsg}: ${errBody.detail}`;
+          } catch (_) {}
+          throw new Error(errMsg);
+        }
         const data = await res.json();
         currentRunId = data.run_id;
         addLog('Run Dispatched', `Allocated run ID: ${currentRunId}`, 'info');
@@ -2185,6 +2225,21 @@
 
       } catch (err) {
         addLog('Dispatch Failed', err.message, 'error');
+        badge.innerText = 'Error';
+        badge.className = 'status-tag is-error';
+        const reportEl = document.getElementById('reportContainer');
+        reportEl.innerHTML = '';
+        const box = document.createElement('div');
+        box.className = 'error-alert-box';
+        const title = document.createElement('h3');
+        title.className = 'error-title';
+        title.textContent = 'Investigation Failed';
+        const details = document.createElement('p');
+        details.className = 'error-details-pre';
+        details.textContent = err.message || 'Unable to reach research service. Please try again.';
+        box.appendChild(title);
+        box.appendChild(details);
+        reportEl.appendChild(box);
         startBtn.disabled = false;
         startBtn.title = 'Launch investigation';
         startBtn.innerHTML = SUBMIT_IDLE_HTML;
@@ -2319,12 +2374,13 @@
         const refUrls = {};
         reportEl.querySelectorAll('table').forEach(table => {
           const headers = Array.from(table.querySelectorAll('thead th')).map(th => (th.textContent || '').trim());
+          const isRefTable = headers[0] === '#' && (headers[1] || '').toLowerCase().includes('source');
           table.querySelectorAll('tbody tr, tr').forEach(tr => {
             const cells = tr.querySelectorAll('td');
             cells.forEach((td, i) => {
               if (headers[i]) td.setAttribute('data-label', headers[i]);
             });
-            if (cells.length >= 2) {
+            if (isRefTable && cells.length >= 2) {
               const match = (cells[0].textContent || '').trim().match(/^\[(\d+)\]$/);
               if (match) {
                 const num = match[1];
@@ -2341,20 +2397,21 @@
           });
         });
 
-        // Strip broken relative anchors (e.g. #cite_note-1) and enforce target="_blank" on external links
+        // Strip unsafe schemes (javascript:, data:) and broken relative anchors, enforce target="_blank" on external links
         reportEl.querySelectorAll('a[href]').forEach(a => {
-          const href = a.getAttribute('href') || '';
-          if (href.startsWith('#') && !href.startsWith('#ref-')) {
-            a.replaceWith(document.createTextNode(a.textContent || ''));
-            return;
-          }
+          const href = (a.getAttribute('href') || '').trim();
           if (/^https?:\/\//i.test(href)) {
             a.setAttribute('target', '_blank');
             a.setAttribute('rel', 'noopener noreferrer');
+            return;
           }
+          if (href.startsWith('#ref-')) {
+            return;
+          }
+          a.replaceWith(document.createTextNode(a.textContent || ''));
         });
 
-        // Make inline [1], [2] citations clickable in report prose
+        // Make inline [1], [2] citations clickable in report prose (only for existing references)
         const walker = document.createTreeWalker(reportEl, NodeFilter.SHOW_TEXT, {
           acceptNode(node) {
             if (!node.nodeValue || !/\[\d+\]/.test(node.nodeValue)) return NodeFilter.FILTER_REJECT;
@@ -2372,12 +2429,18 @@
           let lastIdx = 0;
           const regex = /\[(\d+)\]/g;
           let m;
+          let replaced = false;
           while ((m = regex.exec(node.nodeValue)) !== null) {
+            const num = m[1];
+            const url = refUrls[num];
+            const refRow = document.getElementById(`ref-${num}`);
+            if (!url && !refRow) {
+              continue;
+            }
+            replaced = true;
             if (m.index > lastIdx) {
               frag.appendChild(document.createTextNode(node.nodeValue.slice(lastIdx, m.index)));
             }
-            const num = m[1];
-            const url = refUrls[num];
             const a = document.createElement('a');
             a.className = 'inline-citation';
             a.textContent = `[${num}]`;
@@ -2393,6 +2456,7 @@
             frag.appendChild(a);
             lastIdx = regex.lastIndex;
           }
+          if (!replaced) return;
           if (lastIdx < node.nodeValue.length) {
             frag.appendChild(document.createTextNode(node.nodeValue.slice(lastIdx)));
           }
@@ -2441,15 +2505,37 @@
           const cleanExcerpt = (ev.excerpt || '')
             .replace(/\[\[\d+\]\]\(#[^)]*\)/g, '')
             .replace(/\[\d+\]\(#[^)]*\)/g, '')
-            .replace(/\[([^\]]+)\]\(#[^)]*\)/g, '$1');
-          card.innerHTML = `
-            <div class="evidence-box-head">
-              <span class="evidence-tool-name">${headerTitle}</span>
-              <span class="evidence-badge ${ev.trust_level === 'trusted' ? '' : 'is-untrusted'}">${ev.trust_level}</span>
-            </div>
-            <p class="evidence-excerpt-text">"${cleanExcerpt}"</p>
-            ${ev.source_url ? `<a href="${ev.source_url}" target="_blank" rel="noopener noreferrer" class="evidence-anchor">${ev.source_url}</a>` : ''}
-          `;
+            .replace(/\[([^\]]+)\]\(#[^)]*\)/g, '$1')
+            .replace(/^[ \t]*#{1,6}[ \t]+/gm, '')
+            .replace(/\s#{2,6}[ \t]+/g, ' ');
+
+          const headDiv = document.createElement('div');
+          headDiv.className = 'evidence-box-head';
+          const titleSpan = document.createElement('span');
+          titleSpan.className = 'evidence-tool-name';
+          titleSpan.textContent = headerTitle;
+          const badgeSpan = document.createElement('span');
+          badgeSpan.className = `evidence-badge ${ev.trust_level === 'trusted' ? '' : 'is-untrusted'}`;
+          badgeSpan.textContent = ev.trust_level || 'untrusted';
+          headDiv.appendChild(titleSpan);
+          headDiv.appendChild(badgeSpan);
+
+          const excerptP = document.createElement('p');
+          excerptP.className = 'evidence-excerpt-text';
+          excerptP.textContent = `"${cleanExcerpt}"`;
+
+          card.appendChild(headDiv);
+          card.appendChild(excerptP);
+
+          if (ev.source_url && /^https?:\/\//i.test(ev.source_url.trim())) {
+            const anchor = document.createElement('a');
+            anchor.href = ev.source_url.trim();
+            anchor.target = '_blank';
+            anchor.rel = 'noopener noreferrer';
+            anchor.className = 'evidence-anchor';
+            anchor.textContent = ev.source_url.trim();
+            card.appendChild(anchor);
+          }
           evContainer.appendChild(card);
         });
       } else {

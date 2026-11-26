@@ -45,8 +45,13 @@ class WebSearchTool:
     @classmethod
     def _is_irrelevant_profile_url(cls, url: str, query: str) -> bool:
         """Filters social media domains and profile/post URLs from research sources."""
-        parsed = urllib.parse.urlparse(url.strip())
-        host = parsed.netloc.lower().split(":")[0]
+        raw = url.strip()
+        if not raw:
+            return False
+        if "://" not in raw and not raw.startswith("//"):
+            raw = f"https://{raw}"
+        parsed = urllib.parse.urlparse(raw)
+        host = (parsed.hostname or "").lower().rstrip(".")
         return any(host == domain or host.endswith(f".{domain}") for domain in cls._BLOCKED_SOCIAL_DOMAINS)
 
     async def _search_duckduckgo(self, query: str, max_results: int) -> tuple[str, list[dict[str, Any]]]:

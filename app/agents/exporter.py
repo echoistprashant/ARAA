@@ -9,12 +9,16 @@ class ReportExporter:
     """Formats structured research reports and verification audits into clean, citable Markdown."""
 
     @staticmethod
-    def _sanitize_excerpt(text: str) -> str:
-        """Removes relative anchor links (e.g. Wikipedia #cite_note-1) and normalizes whitespace."""
+    def _sanitize_excerpt(text: str | None) -> str:
+        """Removes relative anchor links (e.g. Wikipedia #cite_note-1), markdown headings, and normalizes whitespace."""
+        if not text:
+            return ""
         cleaned = re.sub(r"\[\[\d+\]\]\(#[^)]*\)", "", text)
         cleaned = re.sub(r"\[\d+\]\(#[^)]*\)", "", cleaned)
         cleaned = re.sub(r"\[([^\]]+)\]\(#[^)]*\)", r"\1", cleaned)
         cleaned = re.sub(r"<a\b[^>]*href=[\"']#[^\"']*[\"'][^>]*>.*?</a>", "", cleaned, flags=re.IGNORECASE | re.DOTALL)
+        cleaned = re.sub(r"(?m)^[ \t]*#{1,6}[ \t]+", "", cleaned)
+        cleaned = re.sub(r"\s#{2,6}[ \t]+", " ", cleaned)
         return re.sub(r"\s+", " ", cleaned).strip()
 
     @staticmethod
@@ -25,8 +29,24 @@ class ReportExporter:
         get_citation_num,
     ) -> str:
         """Ensures inline [1], [2] citations appear in raw_final_report when missing."""
-        if re.search(r"\[\d+\]", raw_text) or not evidence:
+        if not evidence:
             return raw_text
+
+        # Check outside fenced code blocks if plausible [1..N] citations already exist
+        non_code_lines: list[str] = []
+        in_fence = False
+        for line in raw_text.splitlines():
+            s = line.strip()
+            if s.startswith("```") or s.startswith("~~~"):
+                in_fence = not in_fence
+                continue
+            if not in_fence:
+                non_code_lines.append(line)
+        existing_nums = [int(n) for n in re.findall(r"\[(\d+)\]", "\n".join(non_code_lines))]
+        if any(1 <= n <= len(evidence) for n in existing_nums):
+            return raw_text
+
+        valid_ids = {ev.id for ev in evidence}
 
         # Map each evidence item to its citation number and keywords
         ev_entries: list[tuple[int, set[str]]] = []
@@ -35,26 +55,32 @@ class ReportExporter:
             words = {w for w in re.findall(r"[a-z0-9]{4,}", f"{ev.title or ''} {ev.excerpt}".lower())}
             ev_entries.append((num, words))
 
-        # Also use synthesized claims' evidence_ids if available
+        # Also use synthesized claims' evidence_ids if available (only valid IDs)
         claim_cites: list[tuple[set[str], list[int]]] = []
         for claim in (report.claims or []):
-            if claim.evidence_ids:
+            valid_claim_ids = [eid for eid in (claim.evidence_ids or []) if eid in valid_ids]
+            if valid_claim_ids:
                 c_words = {w for w in re.findall(r"[a-z0-9]{4,}", claim.text.lower())}
-                nums = [get_citation_num(eid) for eid in claim.evidence_ids]
+                nums = [get_citation_num(eid) for eid in valid_claim_ids]
                 if nums:
                     claim_cites.append((c_words, nums))
 
         out_lines: list[str] = []
+        in_code_fence = False
         for line in raw_text.splitlines():
             stripped = line.strip()
-            # Skip headings, empty lines, tables, horizontal rules, blockquotes, and code fences
+            if stripped.startswith("```") or stripped.startswith("~~~"):
+                in_code_fence = not in_code_fence
+                out_lines.append(line)
+                continue
+            # Skip lines inside fenced code blocks, headings, empty lines, tables, hrs, blockquotes
             if (
-                not stripped
+                in_code_fence
+                or not stripped
                 or stripped.startswith("#")
                 or stripped.startswith("|")
                 or stripped.startswith("---")
                 or stripped.startswith(">")
-                or stripped.startswith("```")
                 or len(stripped) < 40
             ):
                 out_lines.append(line)

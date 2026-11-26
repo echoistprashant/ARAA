@@ -88,3 +88,51 @@ def test_report_exporter_sanitizes_relative_anchors_and_injects_citations():
     assert "#cite_note-1" not in md
     assert "#cite_note-2" not in md
     assert "[1]" in md
+
+
+def test_report_exporter_skips_code_blocks_and_dangling_evidence_ids():
+    """Verifies fenced code blocks are not mutated and dangling claim evidence_ids are ignored."""
+    evidence = [
+        EvidenceItem(
+            id="ev_001",
+            tool_name="web_search",
+            query="OpenAI",
+            excerpt="Sam Altman leads OpenAI since 2019.",
+            source_url="https://openai.com",
+            trust_level="untrusted",
+        )
+    ]
+    report = StructuredReport(
+        title="OpenAI",
+        executive_summary="Summary.",
+        claims=[
+            ReportClaim(
+                text="Sam Altman leads OpenAI since 2019.",
+                evidence_ids=["ev_001", "missing_id"],
+            )
+        ],
+        limitations=[],
+        conclusion="Done.",
+    )
+    raw_report = (
+        "# OpenAI\n\n"
+        "```python\n"
+        "sam_altman_leads_openai_since_2019_config = {'year': [2019]}\n"
+        "```\n\n"
+        "Sam Altman leads OpenAI since 2019 in San Francisco."
+    )
+
+    md = ReportExporter.to_markdown(report, None, evidence, raw_final_report=raw_report)
+
+    assert "sam_altman_leads_openai_since_2019_config = {'year': [2019]}\n```" in md
+    assert "[2]" not in md
+    assert "Sam Altman leads OpenAI since 2019 in San Francisco. [1]" in md
+
+
+def test_report_exporter_strips_markdown_headings_from_excerpts():
+    """Verifies markdown ATX headings (## Abstract, ### Cite this article) are stripped from excerpts."""
+    raw_excerpt = "## Abstract\nIntermittent fasting improves insulin sensitivity. ### Cite this article"
+    cleaned = ReportExporter._sanitize_excerpt(raw_excerpt)
+    assert "##" not in cleaned
+    assert "###" not in cleaned
+    assert cleaned == "Abstract Intermittent fasting improves insulin sensitivity. Cite this article"
